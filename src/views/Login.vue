@@ -9,8 +9,8 @@
             <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
             <n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" @submit.prevent="login">
-                <n-form-item path="username" label="用户名">
-                    <n-input class="dark-color" v-model:value="formData.username" placeholder="请输入邮箱/手机号">
+                <n-form-item path="phone" label="手机号">
+                    <n-input class="dark-color" v-model:value="formData.phone" placeholder="请输入手机号">
                         <template #prefix>
                             <n-icon :component="PersonOutline" />
                         </template>
@@ -88,7 +88,7 @@ const message = useMessage();
 // 表单数据
 const formRef = ref(null);
 const formData = reactive({
-    username: '',
+    phone: '',
     password: '',
     captcha: '',
     rememberMe: false
@@ -96,10 +96,19 @@ const formData = reactive({
 
 // 表单验证规则
 const rules = {
-    username: {
+    phone: {
         required: true,
-        message: '请输入用户名',
-        trigger: 'blur'
+        message: '请输入手机号',
+        trigger: 'blur',
+        validator: (rule, value) => {
+            // 手机号正则表达式（11位数字）
+            const phoneRegex = /^1[3-9]\d{9}$/
+            if (phoneRegex.test(value)) {
+                return true
+            } else {
+                return new Error('请输入有效的手机号码')
+            }
+        }
     },
     password: {
         required: true,
@@ -123,7 +132,7 @@ const login = (e) => {
             try {
                 // 调用登录API
                 await userApi.login({
-                    userName: formData.username,
+                    username: formData.phone,
                     password: formData.password,
                     captcha: formData.captcha,
                     rememberMe: formData.rememberMe
@@ -143,7 +152,7 @@ const login = (e) => {
                     }
 
                     message.success('登录成功');
-                    router.push('/chat');
+                    router.push('/index');
                 })
             } catch (error) {
                 // 处理登录失败

@@ -10,29 +10,28 @@
 
             <n-form ref="formRef" :model="formData" :rules="rules" label-placement="left" @submit.prevent="register">
                 <div class="form-row">
-                    <n-form-item path="username" label="用户名">
-                        <n-input v-model:value="formData.username" placeholder="请输入用户名">
+                    <n-form-item path="username" label="昵称">
+                        <n-input v-model:value="formData.username" placeholder="请输入昵称">
                             <template #prefix>
                                 <n-icon :component="PersonOutline" />
                             </template>
                         </n-input>
                     </n-form-item>
 
-                    <n-form-item path="email" label="邮箱">
-                        <n-input v-model:value="formData.email" placeholder="请输入邮箱">
+                    <n-form-item path="phone" label="手机号码">
+                        <n-input v-model:value="formData.phone" placeholder="请输入手机号码">
                             <template #prefix>
-                                <n-icon :component="MailOutline" />
+                                <n-icon :component="PhonePortraitOutline" />
                             </template>
                         </n-input>
                     </n-form-item>
                 </div>
 
-                <n-form-item path="phone" label="手机号码">
-                    <n-input v-model:value="formData.phone" placeholder="请输入手机号码">
-                        <template #prefix>
-                            <n-icon :component="PhonePortraitOutline" />
-                        </template>
-                    </n-input>
+                <n-form-item path="gender" label="性别">
+                    <n-radio-group v-model:value="formData.gender">
+                        <n-radio :value="1">男</n-radio>
+                        <n-radio :value="2">女</n-radio>
+                    </n-radio-group>
                 </n-form-item>
 
                 <div class="form-row">
@@ -52,6 +51,45 @@
                                 <n-icon :component="LockClosedOutline" />
                             </template>
                         </n-input>
+                    </n-form-item>
+                </div>
+
+                <n-divider title-placement="left">详细信息（选填）</n-divider>
+
+                <div class="form-row">
+                    <n-form-item path="realName" label="真实姓名">
+                    <n-input v-model:value="formData.realName" placeholder="选填">
+                        <template #prefix>
+                            <n-icon :component="PersonOutline" />
+                        </template>
+                    </n-input>
+                </n-form-item>
+                    <n-form-item path="idNumber" label="身份证号">
+                        <n-input v-model:value="formData.idNumber" placeholder="选填" maxlength="18">
+                            <template #prefix>
+                                <n-icon :component="CardOutline" />
+                            </template>
+                        </n-input>
+                    </n-form-item>
+
+                    <n-form-item path="licenseNumber" label="驾驶证档案编号">
+                        <n-input v-model:value="formData.licenseNumber" placeholder="选填（12位数字）" maxlength="12">
+                            <template #prefix>
+                                <n-icon :component="CarSportOutline" />
+                            </template>
+                        </n-input>
+                    </n-form-item>
+                </div>
+
+                <div class="form-row">
+                    <n-form-item path="birthdate" label="出生日期">
+                        <n-date-picker v-model:value="formData.birthdate" type="date" placeholder="选填" 
+                            style="width: 100%" format="yyyy-MM-dd" value-format="yyyy-MM-dd" />
+                    </n-form-item>
+
+                    <n-form-item path="licenseDate" label="初次领证日期">
+                        <n-date-picker v-model:value="formData.licenseDate" type="date" placeholder="选填"
+                            style="width: 100%" format="yyyy-MM-dd" value-format="yyyy-MM-dd" />
                     </n-form-item>
                 </div>
 
@@ -101,15 +139,19 @@ import {
     NIcon,
     NCheckbox,
     NGrid,
-    NGridItem
+    NGridItem,
+    NRadioGroup,
+    NRadio,
+    NDatePicker
 } from 'naive-ui';
 import {
     PersonOutline,
     LockClosedOutline,
     ShieldCheckmarkOutline,
-    MailOutline,
-    SchoolOutline,
-    PhonePortraitOutline
+    PhonePortraitOutline,
+    CardOutline,
+    CarSportOutline,
+    CalendarOutline
 } from '@vicons/ionicons5';
 
 // 引入API模块
@@ -127,8 +169,13 @@ const formData = reactive({
     username: '',
     password: '',
     confirmPassword: '',
-    email: '',
     phone: '',
+    gender: null,
+    realName: '',
+    idNumber: '',
+    licenseNumber: '',
+    licenseDate: null,
+    birthdate: null,
     captcha: '',
     agreeTerms: false
 });
@@ -137,7 +184,7 @@ const formData = reactive({
 const rules = {
     username: {
         required: true,
-        message: '请输入用户名',
+        message: '请输入昵称',
         trigger: 'blur'
     },
     password: {
@@ -153,22 +200,25 @@ const rules = {
             return value === formData.password ? true : new Error('两次输入的密码不一致')
         }
     },
-    email: {
+    phone: {
         required: true,
-        message: '请输入邮箱',
+        message: '请输入手机号码',
         trigger: 'blur',
         validator: (rule, value) => {
-            // 邮箱正则表达式
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-            // 学号正则表达式（假设学号是纯数字且长度在5-20位之间）
-            // const studentIdRegex = /^\d{5,20}$/
-
-            if (emailRegex.test(value)) {
+            // 手机号正则表达式（11位数字）
+            const phoneRegex = /^1[3-9]\d{9}$/
+            if (phoneRegex.test(value)) {
                 return true
             } else {
-                return new Error('请输入有效的邮箱')
+                return new Error('请输入有效的手机号码')
             }
         }
+    },
+    gender: {
+        required: true,
+        type: 'number',
+        message: '请选择性别',
+        trigger: 'change'
     },
     captcha: {
         required: true,
@@ -180,6 +230,34 @@ const rules = {
         type: 'boolean',
         message: '请阅读并同意用户协议',
         trigger: 'change'
+    },
+    idNumber: {
+        required: false,
+        trigger: 'blur',
+        validator: (rule, value) => {
+            if (!value) return true; // 选填字段，如果为空则通过
+            // 身份证号验证：18位，最后一位可以是X
+            const idNumberRegex = /^[1-9]\d{5}(19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])\d{3}[\dXx]$/;
+            if (idNumberRegex.test(value)) {
+                return true;
+            } else {
+                return new Error('请输入有效的身份证号码');
+            }
+        }
+    },
+    licenseNumber: {
+        required: false,
+        trigger: 'blur',
+        validator: (rule, value) => {
+            if (!value) return true; // 选填字段，如果为空则通过
+            // 驾驶证档案编号：12位纯数字
+            const licenseRegex = /^\d{12}$/;
+            if (licenseRegex.test(value)) {
+                return true;
+            } else {
+                return new Error('请输入有效的驾驶证档案编号（12位数字）');
+            }
+        }
     }
 };
 
@@ -202,8 +280,13 @@ const register = async (e) => {
         const response = await userApi.register({
             username: formData.username,
             password: formData.password,
-            email: formData.email,
             phone: formData.phone,
+            gender: formData.gender,
+            realName: formData.realName || null,
+            idNumber: formData.idNumber || null,
+            licenseNumber: formData.licenseNumber || null,
+            licenseDate: formData.licenseDate || null,
+            birthdate: formData.birthdate || null,
             captcha: formData.captcha
         });
 
@@ -222,7 +305,7 @@ const register = async (e) => {
         }
 
         message.success('注册成功');
-        router.push('/chat');
+        router.push('/index');
     } catch (error) {
         // 捕获表单校验失败或注册接口异常
         if (error?.message) {

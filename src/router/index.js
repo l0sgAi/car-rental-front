@@ -16,6 +16,12 @@ const routes = [
     component: () => import("../views/Register.vue"),
   },
   {
+    path: "/index",
+    name: "Index",
+    component: () => import("../views/Index.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/chat",
     name: "Chat",
     component: () => import("../views/Chat.vue"),
