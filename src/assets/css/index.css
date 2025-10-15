@@ -112,17 +112,25 @@
     transition: all 0.3s;
 }
 
-.price-slider {
+.price-input-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     flex: 1;
-    padding-right: 24px;
+    flex-wrap: wrap;
 }
 
-.price-range-display {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
-    color: #18a058;
+.price-separator {
+    color: #999;
+    font-size: 16px;
     font-weight: 500;
+}
+
+.current-price-display {
+    color: #18a058;
+    font-size: 14px;
+    font-weight: 500;
+    margin-left: 8px;
 }
 
 /* 车辆列表 */
@@ -260,6 +268,87 @@
     color: #666;
     padding: 32px;
     font-size: 14px;
+}
+
+/* Naive UI 深色主题额外样式 */
+:deep(.n-input) {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+}
+
+:deep(.n-input:hover) {
+    border-color: rgba(24, 160, 88, 0.4) !important;
+}
+
+:deep(.n-input:focus-within) {
+    border-color: #18a058 !important;
+}
+
+:deep(.n-input__input) {
+    color: #f5f5f5 !important;
+}
+
+:deep(.n-input__placeholder) {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+:deep(.n-input__prefix) {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* 数字输入框样式 */
+:deep(.n-input-number) {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+}
+
+:deep(.n-input-number:hover) {
+    border-color: rgba(24, 160, 88, 0.4) !important;
+}
+
+:deep(.n-input-number:focus-within) {
+    border-color: #18a058 !important;
+}
+
+:deep(.n-input-number .n-input__input) {
+    color: #f5f5f5 !important;
+}
+
+:deep(.n-input-number .n-input__prefix) {
+    color: #18a058 !important;
+}
+
+:deep(.n-input-number-suffix),
+:deep(.n-input-number-prefix) {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+:deep(.n-button) {
+    transition: all 0.3s ease;
+}
+
+:deep(.n-button--primary-type) {
+    background: linear-gradient(135deg, #18a058 0%, #0f7042 100%);
+    border: none;
+}
+
+:deep(.n-button--primary-type:hover) {
+    background: linear-gradient(135deg, #1db662 0%, #12804a 100%);
+    transform: translateY(-1px);
+}
+
+:deep(.n-dropdown-menu) {
+    background-color: #101014 !important;
+}
+
+:deep(.n-dropdown-option) {
+    color: #fff !important;
+}
+
+:deep(.n-dropdown-option:hover) {
+    background-color: rgba(24, 160, 88, 0.15) !important;
 }
 
 /* 响应式布局 */

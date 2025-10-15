@@ -1,7 +1,8 @@
 <template>
-    <div class="index-container">
-        <!-- 顶部导航栏 -->
-        <n-layout-header class="header" bordered>
+    <n-config-provider :theme="darkTheme">
+        <div class="index-container">
+            <!-- 顶部导航栏 -->
+            <n-layout-header class="header" bordered>
             <div class="header-content">
                 <div class="logo-title">
                     <n-icon size="32" :component="CarSportOutline" color="#18a058" />
@@ -10,7 +11,7 @@
                 <div class="user-info">
                     <n-avatar
                         size="medium"
-                        src="null"
+                        :src="userAvatar || ''"
                         fallback-src="https://img.88icon.com/download/jpg/20200812/a64bba5ec27667c367ddf96201fef181_512_512.jpg"
                         round/>
                     <span class="username">{{ username }}</span>
@@ -121,19 +122,33 @@
                     <div class="filter-row">
                         <div class="filter-item full-width">
                             <span class="filter-label">价格区间：</span>
-                            <div class="price-slider">
-                                <n-slider
-                                    v-model:value="priceRange"
-                                    range
-                                    :step="50"
+                            <div class="price-input-group">
+                                <n-input-number
+                                    v-model:value="tempPriceRange[0]"
                                     :min="0"
-                                    :max="2000"
-                                    :format-tooltip="(value) => `¥${value}`"
-                                />
-                                <div class="price-range-display">
-                                    <span>¥{{ priceRange[0] }}</span>
-                                    <span>-</span>
-                                    <span>¥{{ priceRange[1] }}</span>
+                                    :max="tempPriceRange[1]"
+                                    :step="50"
+                                    placeholder="最低价格"
+                                    style="width: 150px"
+                                >
+                                    <template #prefix>¥</template>
+                                </n-input-number>
+                                <span class="price-separator">-</span>
+                                <n-input-number
+                                    v-model:value="tempPriceRange[1]"
+                                    :min="tempPriceRange[0]"
+                                    :max="5000"
+                                    :step="50"
+                                    placeholder="最高价格"
+                                    style="width: 150px"
+                                >
+                                    <template #prefix>¥</template>
+                                </n-input-number>
+                                <n-button type="primary" @click="applyPriceFilter">
+                                    确定
+                                </n-button>
+                                <div class="current-price-display" v-if="priceFilterApplied">
+                                    <span>当前筛选：¥{{ priceRange[0] }} - ¥{{ priceRange[1] }}</span>
                                 </div>
                             </div>
                         </div>
@@ -227,12 +242,13 @@
             </div>
         </n-layout-content>
     </div>
+    </n-config-provider>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, h } from 'vue';
 import { useRouter } from 'vue-router';
-import { useMessage } from 'naive-ui';
+import { useMessage, darkTheme } from 'naive-ui';
 import {
     NLayout,
     NLayoutHeader,
@@ -247,11 +263,12 @@ import {
     NDropdown,
     NTag,
     NDivider,
-    NSlider,
+    NInputNumber,
     NGrid,
     NGridItem,
     NRate,
-    NSpin
+    NSpin,
+    NConfigProvider
 } from 'naive-ui';
 import {
     CarSportOutline,
@@ -269,6 +286,9 @@ import {
 
 // 引入独立的CSS文件
 import '../assets/css/index.css';
+
+// 引入API模块
+import { userApi } from '../api';
 
 const router = useRouter();
 const message = useMessage();
@@ -357,12 +377,32 @@ const selectedCarType = ref('all');
 const selectedBrand = ref('all');
 const selectedPowerType = ref('all');
 const priceRange = ref([0, 2000]);
+const tempPriceRange = ref([0, 2000]); // 临时价格区间，用于输入
+const priceFilterApplied = ref(false); // 是否已应用价格筛选
 const selectedSort = ref('hot');
 
 // 搜索处理
 const handleSearch = () => {
     console.log('搜索关键词:', searchKeyword.value);
     message.info(`搜索: ${searchKeyword.value || '全部车辆'}`);
+};
+
+// 应用价格筛选
+const applyPriceFilter = () => {
+    // 验证输入
+    if (tempPriceRange.value[0] > tempPriceRange.value[1]) {
+        message.error('最低价格不能大于最高价格');
+        return;
+    }
+    
+    // 应用筛选
+    priceRange.value = [...tempPriceRange.value];
+    priceFilterApplied.value = true;
+    
+    message.success(`已应用价格筛选：¥${priceRange.value[0]} - ¥${priceRange.value[1]}`);
+    
+    // 这里可以添加实际的筛选逻辑
+    console.log('价格筛选:', priceRange.value);
 };
 
 // 所有车辆数据
@@ -765,13 +805,35 @@ const handleCarClick = (car) => {
     message.info(`查看 ${car.name} 详情`);
 };
 
+// 获取用户信息
+const fetchUserInfo = async () => {
+    try {
+        const response = await userApi.getUserInfo();
+        
+        if (response.code === 200 && response.data) {
+            const userData = response.data;
+            username.value = userData.username || '租车用户';
+            userAvatar.value = userData.avatarUrl || '';
+            
+            // 同步更新localStorage
+            if (userData.username) {
+                localStorage.setItem('username', userData.username);
+            }
+        }
+    } catch (error) {
+        console.error('获取用户信息失败:', error);
+        // 如果获取失败，从localStorage读取
+        const storedUsername = localStorage.getItem('username');
+        if (storedUsername) {
+            username.value = storedUsername;
+        }
+    }
+};
+
 // 组件挂载时获取用户信息并初始化数据
 onMounted(() => {
-    // 从localStorage获取用户信息
-    const storedUsername = localStorage.getItem('username');
-    if (storedUsername) {
-        username.value = storedUsername;
-    }
+    // 获取用户信息（包括头像）
+    fetchUserInfo();
     
     // 初始化加载数据
     loadInitialData();

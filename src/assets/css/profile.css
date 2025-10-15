@@ -215,6 +215,7 @@
 /* 表单行布局 */
 .form-row {
     display: grid;
+    color: #fff;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
 }
@@ -290,13 +291,31 @@
     transform: translateY(0);
 }
 
-:deep(.n-button:not(.n-button--primary-type)) {
+/* 重置按钮 - 蓝色主题 */
+:deep(.n-button--info-type) {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    color: #fff !important;
+}
+
+:deep(.n-button--info-type:hover) {
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
+}
+
+:deep(.n-button--info-type:active) {
+    transform: translateY(0);
+}
+
+:deep(.n-button:not(.n-button--primary-type):not(.n-button--info-type)) {
     background-color: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: #e0e0e0;
 }
 
-:deep(.n-button:not(.n-button--primary-type):hover) {
+:deep(.n-button:not(.n-button--primary-type):not(.n-button--info-type):hover) {
     background-color: rgba(255, 255, 255, 0.12);
     border-color: rgba(255, 255, 255, 0.25);
 }
@@ -361,5 +380,37 @@
 
 .profile-container::-webkit-scrollbar-thumb:hover {
     background: rgba(24, 160, 88, 0.5);
+}
+
+/* 确保所有文本颜色为白色 */
+:deep(.n-form-item-feedback-wrapper) {
+    color: #f87171 !important;
+}
+
+:deep(.n-base-selection-label) {
+    color: #fff !important;
+}
+
+:deep(.n-base-selection-placeholder) {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* 日期选择器输入框文字颜色 */
+:deep(.n-date-picker .n-input__input) {
+    color: #f5f5f5 !important;
+}
+
+:deep(.n-date-picker .n-input__placeholder) {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* 上传按钮文字确保为白色 */
+:deep(.n-upload .n-button) {
+    color: #fff !important;
+}
+
+/* 所有按钮文字颜色 */
+:deep(.n-button__content) {
+    color: inherit;
 }
 

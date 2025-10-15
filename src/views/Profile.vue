@@ -1,16 +1,17 @@
 <template>
-    <div class="profile-container">
-        <!-- 返回按钮 -->
-        <div class="back-button">
-            <n-button text @click="goBack">
-                <template #icon>
-                    <n-icon :component="ArrowBackOutline" size="24" />
-                </template>
-                返回首页
-            </n-button>
-        </div>
+    <n-config-provider :theme="darkTheme">
+        <div class="profile-container">
+            <!-- 返回按钮 -->
+            <div class="back-button">
+                <n-button text @click="goBack">
+                    <template #icon>
+                        <n-icon :component="ArrowBackOutline" size="24" />
+                    </template>
+                    返回首页
+                </n-button>
+            </div>
 
-        <div class="profile-box">
+            <div class="profile-box">
             <div class="profile-header">
                 <n-icon :component="PersonCircleOutline" size="64" color="#18a058" />
                 <h1>个人中心</h1>
@@ -20,7 +21,7 @@
             <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
             <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
 
-            <n-form ref="formRef" :model="formData" :rules="rules" label-placement="left">
+            <n-form  ref="formRef" :model="formData" :rules="rules" label-placement="left">
                 <!-- 基本信息 -->
                 <n-divider title-placement="left">基本信息</n-divider>
 
@@ -117,7 +118,7 @@
                                 accept="image/*"
                                 @before-upload="beforeAvatarUpload"
                             >
-                                <n-button>
+                                <n-button color="#8b5cf6">
                                     <template #icon>
                                         <n-icon :component="CloudUploadOutline" />
                                     </template>
@@ -145,6 +146,7 @@
                     </n-button>
 
                     <n-button 
+                        type="info"
                         size="large" 
                         @click="resetForm"
                         style="width: 200px">
@@ -157,12 +159,13 @@
             </n-form>
         </div>
     </div>
+    </n-config-provider>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useMessage } from 'naive-ui';
+import { useMessage, darkTheme } from 'naive-ui';
 import {
     NForm,
     NFormItem,
@@ -175,7 +178,8 @@ import {
     NDatePicker,
     NUpload,
     NAvatar,
-    NSpin
+    NSpin,
+    NConfigProvider
 } from 'naive-ui';
 import {
     PersonOutline,
@@ -274,6 +278,46 @@ const successMessage = ref('');
 const isSubmitting = ref(false);
 const isUploading = ref(false);
 
+// 日期格式转换函数
+const formatDate = (date) => {
+    if (!date) return null;
+    
+    // 如果是数字（时间戳）
+    if (typeof date === 'number') {
+        const d = new Date(date);
+        return formatDateToString(d);
+    }
+    
+    // 如果是字符串
+    if (typeof date === 'string') {
+        // 如果已经是 yyyy-MM-dd 格式，直接返回
+        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            return date;
+        }
+        // 否则转换为 Date 对象再格式化
+        const d = new Date(date);
+        return formatDateToString(d);
+    }
+    
+    // 如果是 Date 对象
+    if (date instanceof Date) {
+        return formatDateToString(date);
+    }
+    
+    return null;
+};
+
+// 将 Date 对象格式化为 yyyy-MM-dd
+const formatDateToString = (date) => {
+    if (!date || isNaN(date.getTime())) return null;
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+};
+
 // 获取用户信息
 const fetchUserInfo = async () => {
     try {
@@ -282,16 +326,21 @@ const fetchUserInfo = async () => {
         if (response.code === 200 && response.data) {
             const userData = response.data;
             
+            console.log('后端返回的用户数据:', userData); // 调试日志
+            
             // 更新表单数据
             formData.username = userData.username || '';
             formData.phone = userData.phone || '';
-            formData.gender = userData.gender;
+            formData.gender = userData.gender ?? null;
             formData.realName = userData.realName || '';
             formData.idNumber = userData.idNumber || '';
             formData.licenseNumber = userData.licenseNumber || '';
-            formData.licenseDate = userData.licenseDate || null;
-            formData.birthdate = userData.birthdate || null;
+            // 转换日期格式
+            formData.licenseDate = formatDate(userData.licenseDate);
+            formData.birthdate = formatDate(userData.birthdate);
             formData.avatarUrl = userData.avatarUrl || '';
+            
+            console.log('转换后的表单数据:', formData); // 调试日志
             
             // 保存原始数据
             originalData.value = JSON.parse(JSON.stringify(formData));
