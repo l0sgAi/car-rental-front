@@ -308,7 +308,7 @@ const handleUserMenuSelect = (key) => {
     } else if (key === 'settings') {
         message.info('设置功能开发中');
     } else if (key === 'profile') {
-        message.info('个人中心功能开发中');
+        router.push('/profile');
     }
 };
 

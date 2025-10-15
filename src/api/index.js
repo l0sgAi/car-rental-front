@@ -16,6 +16,9 @@ export const userApi = {
   // 更新用户信息
   updateUserInfo: (data) => put(`/sys/user/info`, data),
   
+  // 用户自更新个人信息
+  updateUserSelf: (data) => put(`/sys/user/user/update`, data),
+  
   // 修改密码
   changePassword: (data) => post(`/sys/user/password`, data),
   
@@ -91,6 +94,17 @@ export const systemApi = {
   
   // 获取验证码
   getCaptcha: () => get(`/system/captcha`),
+  
+  // 文件上传
+  fileUpload: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return post(`/system/file/fileUpload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
 };
 
 /**
