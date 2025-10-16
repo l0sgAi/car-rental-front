@@ -24,6 +24,19 @@ export const userApi = {
   
   // 退出登录
   logout: () => post(`/sys/user/doLogout`),
+  
+  // 管理员接口
+  // 获取所有用户列表（分页+关键字搜索）
+  getUserList: (params) => get(`/sys/user/admin/list`, params),
+  
+  // 管理员新增用户
+  addUser: (data) => post(`/sys/user/admin/add`, data),
+  
+  // 管理员更新用户
+  updateUser: (data) => put(`/sys/user/admin/update`, data),
+  
+  // 管理员删除用户
+  deleteUser: (userId) => put(`/sys/user/admin/delete?id=${userId}`),
 };
 
 /**
@@ -127,6 +140,37 @@ export const configApi = {
   getModels: () => get(`/ai/config/getModels`),
 };
 
+/**
+ * 车辆管理相关API
+ */
+export const carApi = {
+  // 管理员新增车辆
+  addCar: (data) => post(`/rental/car/admin/add`, data),
+  
+  // 管理员更新车辆
+  updateCar: (data) => put(`/rental/car/admin/update`, data),
+  
+  // 管理员删除车辆
+  deleteCar: (id) => put(`/rental/car/admin/delete?id=${id}`),
+  
+  // 管理员获取车辆列表（支持分页和关键字搜索）
+  getCarList: (params) => get(`/rental/car/admin/list`, params),
+  
+  // 全局查询车辆列表
+  globalQuery: (params) => get(`/rental/car/globalQuery`, params),
+};
+
+/**
+ * 品牌管理相关API
+ */
+export const brandApi = {
+  // 管理员获取品牌列表（支持分页和关键字搜索）
+  getBrandList: (params) => get(`/rental/brand/admin/list`, params),
+  
+  // 获取品牌详情
+  getBrandById: (id) => get(`/rental/brand/${id}`),
+};
+
 // 导出所有API
 export default {
   userApi,
@@ -135,4 +179,6 @@ export default {
   messageApi,
   systemApi,
   configApi,
+  carApi,
+  brandApi,
 };

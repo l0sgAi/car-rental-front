@@ -1,0 +1,223 @@
+/* 管理后台通用样式 */
+
+/* 深色主题背景色 */
+.admin-container {
+    background-color: #101014;
+    min-height: 100vh;
+}
+
+/* 侧边栏样式 */
+.admin-sidebar {
+    background: #18181c;
+    border-right: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+/* 顶部导航栏样式 */
+.admin-header {
+    background: #18181c;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+/* 内容区域样式 */
+.admin-content {
+    background: #101014;
+    padding: 24px;
+}
+
+/* 卡片样式 */
+.admin-card {
+    background: #18181c;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+/* 表格样式优化 */
+.n-data-table {
+    background: transparent;
+}
+
+.n-data-table .n-data-table-th {
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.n-data-table .n-data-table-td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 按钮样式 */
+.admin-button-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 搜索栏样式 */
+.admin-search-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+/* 统计卡片样式 */
+.admin-stat-card {
+    background: linear-gradient(135deg, rgba(24, 160, 88, 0.1) 0%, rgba(24, 160, 88, 0.05) 100%);
+    border: 1px solid rgba(24, 160, 88, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.admin-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* 表单样式 */
+.admin-form {
+    background: #18181c;
+    padding: 24px;
+    border-radius: 8px;
+}
+
+.admin-form-item {
+    margin-bottom: 20px;
+}
+
+/* 标签样式 */
+.admin-tag {
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* 分页样式 */
+.admin-pagination {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+/* 空状态样式 */
+.admin-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.admin-empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.admin-empty-text {
+    font-size: 16px;
+}
+
+/* 加载状态 */
+.admin-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .admin-content {
+        padding: 16px;
+    }
+    
+    .admin-search-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .admin-button-group {
+        width: 100%;
+    }
+}
+
+/* 滚动条样式 */
+.admin-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.admin-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* 高亮效果 */
+.admin-highlight {
+    background: rgba(24, 160, 88, 0.1);
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: #18a058;
+}
+
+/* 警告提示 */
+.admin-warning {
+    background: rgba(240, 160, 32, 0.1);
+    border-left: 3px solid #f0a020;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 12px 0;
+}
+
+/* 错误提示 */
+.admin-error {
+    background: rgba(208, 48, 80, 0.1);
+    border-left: 3px solid #d03050;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 12px 0;
+}
+
+/* 成功提示 */
+.admin-success {
+    background: rgba(24, 160, 88, 0.1);
+    border-left: 3px solid #18a058;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 12px 0;
+}
+
+/* 信息提示 */
+.admin-info {
+    background: rgba(32, 128, 240, 0.1);
+    border-left: 3px solid #2080f0;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 12px 0;
+}
+

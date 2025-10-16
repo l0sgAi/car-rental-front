@@ -8,6 +8,15 @@
                     <n-icon size="32" :component="CarSportOutline" color="#18a058" />
                     <span class="title">租车帝租赁平台</span>
                 </div>
+                <!-- 管理后台按钮（仅管理员可见） -->
+                <div class="admin-button" v-if="userRole === 1">
+                    <n-button type="warning" @click="goToAdmin">
+                        <template #icon>
+                            <n-icon :component="SettingsOutline" />
+                        </template>
+                        管理后台
+                    </n-button>
+                </div>
                 <div class="user-info">
                     <n-avatar
                         size="medium"
@@ -296,6 +305,7 @@ const message = useMessage();
 // 用户信息
 const username = ref('租车用户');
 const userAvatar = ref('');
+const userRole = ref(0); // 用户角色：0=普通用户，1=管理员
 
 // 用户菜单选项
 const userMenuOptions = [
@@ -814,20 +824,33 @@ const fetchUserInfo = async () => {
             const userData = response.data;
             username.value = userData.username || '租车用户';
             userAvatar.value = userData.avatarUrl || '';
+            userRole.value = userData.role || 0; // 获取用户角色
             
             // 同步更新localStorage
             if (userData.username) {
                 localStorage.setItem('username', userData.username);
+            }
+            if (userData.role !== undefined) {
+                localStorage.setItem('userRole', userData.role.toString());
             }
         }
     } catch (error) {
         console.error('获取用户信息失败:', error);
         // 如果获取失败，从localStorage读取
         const storedUsername = localStorage.getItem('username');
+        const storedRole = localStorage.getItem('userRole');
         if (storedUsername) {
             username.value = storedUsername;
         }
+        if (storedRole) {
+            userRole.value = parseInt(storedRole);
+        }
     }
+};
+
+// 跳转到管理后台
+const goToAdmin = () => {
+    router.push('/admin');
 };
 
 // 组件挂载时获取用户信息并初始化数据
