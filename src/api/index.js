@@ -156,8 +156,11 @@ export const carApi = {
   // 管理员获取车辆列表（支持分页和关键字搜索）
   getCarList: (params) => get(`/rental/car/admin/list`, params),
   
-  // 全局查询车辆列表
-  globalQuery: (params) => get(`/rental/car/globalQuery`, params),
+  // 全局查询车辆列表（使用POST + RequestBody）
+  globalQuery: (data) => post(`/rental/car/globalQuery`, data),
+  
+  // 管理员一键上架车辆到ES
+  upCars: () => post(`/rental/car/admin/up`),
 };
 
 /**

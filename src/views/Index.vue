@@ -96,8 +96,11 @@
                                     checkable
                                     :checked="selectedBrand === brand.value"
                                     @click="selectedBrand = brand.value"
-                                    class="filter-tag"
+                                    class="filter-tag brand-tag"
                                 >
+                                    <template v-if="brand.logo">
+                                        <img :src="brand.logo" :alt="brand.label" class="brand-logo" />
+                                    </template>
                                     {{ brand.label }}
                                 </n-tag>
                             </n-space>
@@ -155,6 +158,9 @@
                                 </n-input-number>
                                 <n-button type="primary" @click="applyPriceFilter">
                                     确定
+                                </n-button>
+                                <n-button v-if="priceFilterApplied" @click="clearPriceFilter" style="margin-left: 8px">
+                                    清除
                                 </n-button>
                                 <div class="current-price-display" v-if="priceFilterApplied">
                                     <span>当前筛选：¥{{ priceRange[0] }} - ¥{{ priceRange[1] }}</span>
@@ -226,7 +232,7 @@
                                     </div>
                                 </div>
                                 <div class="car-rating">
-                                    <n-rate :value="car.rating" readonly size="small" />
+                                    <n-rate :value="car.rating" :allow-half="true" readonly size="small" />
                                     <span class="rating-score">{{ car.rating.toFixed(1) }}</span>
                                     <span class="rating-count">({{ car.ratingCount }})</span>
                                 </div>
@@ -245,9 +251,6 @@
                     <n-spin size="large" />
                     <span>加载中...</span>
                 </div>
-                <div class="no-more-section" v-else-if="noMoreData">
-                    <span>已加载全部车辆</span>
-                </div>
             </div>
         </n-layout-content>
     </div>
@@ -255,7 +258,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, h } from 'vue';
+import { ref, onMounted, h, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage, darkTheme } from 'naive-ui';
 import {
@@ -297,7 +300,7 @@ import {
 import '../assets/css/index.css';
 
 // 引入API模块
-import { userApi } from '../api';
+import { userApi, carApi, brandApi } from '../api';
 
 const router = useRouter();
 const message = useMessage();
@@ -352,20 +355,14 @@ const carTypes = [
     { label: 'SUV', value: 'suv' },
     { label: 'MPV', value: 'mpv' },
     { label: '跑车', value: 'sports' },
-    { label: '商务车', value: 'business' }
+    { label: '越野车', value: 'off-road' },
+    { label: '特种车', value: 'business' }
 ];
 
-const brands = [
-    { label: '全部', value: 'all' },
-    { label: '奔驰', value: 'benz' },
-    { label: '宝马', value: 'bmw' },
-    { label: '奥迪', value: 'audi' },
-    { label: '特斯拉', value: 'tesla' },
-    { label: '比亚迪', value: 'byd' },
-    { label: '蔚来', value: 'nio' },
-    { label: '理想', value: 'li' },
-    { label: '小鹏', value: 'xpeng' }
-];
+// 品牌列表（从后端动态获取）
+const brands = ref([
+    { label: '全部', value: 'all', logo: null }
+]);
 
 const powerTypes = [
     { label: '全部', value: 'all' },
@@ -393,8 +390,10 @@ const selectedSort = ref('hot');
 
 // 搜索处理
 const handleSearch = () => {
-    console.log('搜索关键词:', searchKeyword.value);
-    message.info(`搜索: ${searchKeyword.value || '全部车辆'}`);
+    // console.log('搜索关键词:', searchKeyword.value);
+    // message.info(`搜索: ${searchKeyword.value || '全部车辆'}`);
+    // 重新加载
+    fetchCarList();
 };
 
 // 应用价格筛选
@@ -411,404 +410,247 @@ const applyPriceFilter = () => {
     
     message.success(`已应用价格筛选：¥${priceRange.value[0]} - ¥${priceRange.value[1]}`);
     
-    // 这里可以添加实际的筛选逻辑
-    console.log('价格筛选:', priceRange.value);
+    // 重新加载
+    fetchCarList();
 };
 
-// 所有车辆数据
-const allCarData = [
-    {
-        id: 1,
-        name: '奔驰E300L',
-        brand: '奔驰',
-        type: '轿车',
-        powerType: '纯油',
-        price: 599,
-        rating: 4.8,
-        ratingCount: 1253,
-        fuelConsumption: 7.2,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/2c3e50/ffffff?text=Mercedes+E300L',
-        isHot: true
-    },
-    {
-        id: 2,
-        name: '宝马5系',
-        brand: '宝马',
-        type: '轿车',
-        powerType: '混动',
-        price: 699,
-        rating: 4.7,
-        ratingCount: 987,
-        fuelConsumption: 6.8,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/34495e/ffffff?text=BMW+5+Series',
-        isHot: true
-    },
-    {
-        id: 3,
-        name: '奥迪A6L',
-        brand: '奥迪',
-        type: '轿车',
-        powerType: '纯油',
-        price: 579,
-        rating: 4.6,
-        ratingCount: 876,
-        fuelConsumption: 7.5,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/2980b9/ffffff?text=Audi+A6L',
-        isHot: false
-    },
-    {
-        id: 4,
-        name: '特斯拉Model 3',
-        brand: '特斯拉',
-        type: '轿车',
-        powerType: '纯电',
-        price: 499,
-        rating: 4.9,
-        ratingCount: 2134,
-        fuelConsumption: 0,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/e74c3c/ffffff?text=Tesla+Model+3',
-        isHot: true
-    },
-    {
-        id: 5,
-        name: '比亚迪汉EV',
-        brand: '比亚迪',
-        type: '轿车',
-        powerType: '纯电',
-        price: 399,
-        rating: 4.5,
-        ratingCount: 1567,
-        fuelConsumption: 0,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/16a085/ffffff?text=BYD+Han+EV',
-        isHot: false
-    },
-    {
-        id: 6,
-        name: '理想L9',
-        brand: '理想',
-        type: 'SUV',
-        powerType: '插混',
-        price: 799,
-        rating: 4.8,
-        ratingCount: 934,
-        fuelConsumption: 1.8,
-        space: 6,
-        image: 'https://via.placeholder.com/300x200/8e44ad/ffffff?text=Li+L9',
-        isHot: true
-    },
-    {
-        id: 7,
-        name: '蔚来ES6',
-        brand: '蔚来',
-        type: 'SUV',
-        powerType: '纯电',
-        price: 599,
-        rating: 4.7,
-        ratingCount: 1123,
-        fuelConsumption: 0,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/27ae60/ffffff?text=Nio+ES6',
-        isHot: false
-    },
-    {
-        id: 8,
-        name: '小鹏P7',
-        brand: '小鹏',
-        type: '轿车',
-        powerType: '纯电',
-        price: 449,
-        rating: 4.6,
-        ratingCount: 892,
-        fuelConsumption: 0,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/f39c12/ffffff?text=Xpeng+P7',
-        isHot: false
-    },
-    {
-        id: 9,
-        name: '奔驰GLE',
-        brand: '奔驰',
-        type: 'SUV',
-        powerType: '纯油',
-        price: 899,
-        rating: 4.9,
-        ratingCount: 756,
-        fuelConsumption: 9.5,
-        space: 7,
-        image: 'https://via.placeholder.com/300x200/2c3e50/ffffff?text=Mercedes+GLE',
-        isHot: true
-    },
-    {
-        id: 10,
-        name: '宝马X5',
-        brand: '宝马',
-        type: 'SUV',
-        powerType: '混动',
-        price: 999,
-        rating: 4.8,
-        ratingCount: 643,
-        fuelConsumption: 7.9,
-        space: 7,
-        image: 'https://via.placeholder.com/300x200/34495e/ffffff?text=BMW+X5',
-        isHot: true
-    },
-    {
-        id: 11,
-        name: '奥迪Q7',
-        brand: '奥迪',
-        type: 'SUV',
-        powerType: '纯油',
-        price: 849,
-        rating: 4.7,
-        ratingCount: 532,
-        fuelConsumption: 9.2,
-        space: 7,
-        image: 'https://via.placeholder.com/300x200/2980b9/ffffff?text=Audi+Q7',
-        isHot: false
-    },
-    {
-        id: 12,
-        name: '特斯拉Model Y',
-        brand: '特斯拉',
-        type: 'SUV',
-        powerType: '纯电',
-        price: 599,
-        rating: 4.8,
-        ratingCount: 1834,
-        fuelConsumption: 0,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/e74c3c/ffffff?text=Tesla+Model+Y',
-        isHot: true
-    },
-    // 添加更多模拟数据用于测试懒加载
-    {
-        id: 13,
-        name: '保时捷Taycan',
-        brand: '保时捷',
-        type: '跑车',
-        powerType: '纯电',
-        price: 1299,
-        rating: 4.9,
-        ratingCount: 421,
-        fuelConsumption: 0,
-        space: 4,
-        image: 'https://via.placeholder.com/300x200/c0392b/ffffff?text=Porsche+Taycan',
-        isHot: true
-    },
-    {
-        id: 14,
-        name: '本田雅阁',
-        brand: '本田',
-        type: '轿车',
-        powerType: '混动',
-        price: 399,
-        rating: 4.5,
-        ratingCount: 1832,
-        fuelConsumption: 4.2,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/2c3e50/ffffff?text=Honda+Accord',
-        isHot: false
-    },
-    {
-        id: 15,
-        name: '丰田凯美瑞',
-        brand: '丰田',
-        type: '轿车',
-        powerType: '混动',
-        price: 429,
-        rating: 4.6,
-        ratingCount: 2156,
-        fuelConsumption: 4.1,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/34495e/ffffff?text=Toyota+Camry',
-        isHot: false
-    },
-    {
-        id: 16,
-        name: '大众途观L',
-        brand: '大众',
-        type: 'SUV',
-        powerType: '纯油',
-        price: 479,
-        rating: 4.4,
-        ratingCount: 1567,
-        fuelConsumption: 7.8,
-        space: 7,
-        image: 'https://via.placeholder.com/300x200/16a085/ffffff?text=VW+Tiguan+L',
-        isHot: false
-    },
-    {
-        id: 17,
-        name: '别克GL8',
-        brand: '别克',
-        type: 'MPV',
-        powerType: '纯油',
-        price: 599,
-        rating: 4.5,
-        ratingCount: 892,
-        fuelConsumption: 8.5,
-        space: 7,
-        image: 'https://via.placeholder.com/300x200/8e44ad/ffffff?text=Buick+GL8',
-        isHot: false
-    },
-    {
-        id: 18,
-        name: '沃尔沃XC90',
-        brand: '沃尔沃',
-        type: 'SUV',
-        powerType: '插混',
-        price: 799,
-        rating: 4.7,
-        ratingCount: 654,
-        fuelConsumption: 2.1,
-        space: 7,
-        image: 'https://via.placeholder.com/300x200/27ae60/ffffff?text=Volvo+XC90',
-        isHot: false
-    },
-    {
-        id: 19,
-        name: '路虎揽胜',
-        brand: '路虎',
-        type: 'SUV',
-        powerType: '纯油',
-        price: 1499,
-        rating: 4.8,
-        ratingCount: 432,
-        fuelConsumption: 11.2,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/f39c12/ffffff?text=Range+Rover',
-        isHot: true
-    },
-    {
-        id: 20,
-        name: '凯迪拉克CT6',
-        brand: '凯迪拉克',
-        type: '轿车',
-        powerType: '纯油',
-        price: 699,
-        rating: 4.5,
-        ratingCount: 567,
-        fuelConsumption: 8.1,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/e67e22/ffffff?text=Cadillac+CT6',
-        isHot: false
-    },
-    {
-        id: 21,
-        name: '雷克萨斯ES',
-        brand: '雷克萨斯',
-        type: '轿车',
-        powerType: '混动',
-        price: 579,
-        rating: 4.7,
-        ratingCount: 1234,
-        fuelConsumption: 4.5,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/9b59b6/ffffff?text=Lexus+ES',
-        isHot: false
-    },
-    {
-        id: 22,
-        name: '日产天籁',
-        brand: '日产',
-        type: '轿车',
-        powerType: '纯油',
-        price: 349,
-        rating: 4.3,
-        ratingCount: 1789,
-        fuelConsumption: 6.2,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/3498db/ffffff?text=Nissan+Altima',
-        isHot: false
-    },
-    {
-        id: 23,
-        name: '马自达CX-5',
-        brand: '马自达',
-        type: 'SUV',
-        powerType: '纯油',
-        price: 399,
-        rating: 4.5,
-        ratingCount: 987,
-        fuelConsumption: 7.1,
-        space: 5,
-        image: 'https://via.placeholder.com/300x200/e74c3c/ffffff?text=Mazda+CX-5',
-        isHot: false
-    },
-    {
-        id: 24,
-        name: '领克09',
-        brand: '领克',
-        type: 'SUV',
-        powerType: '插混',
-        price: 599,
-        rating: 4.6,
-        ratingCount: 543,
-        fuelConsumption: 1.9,
-        space: 6,
-        image: 'https://via.placeholder.com/300x200/1abc9c/ffffff?text=Lynk+09',
-        isHot: false
-    }
-];
+// 清除价格筛选
+const clearPriceFilter = () => {
+    priceRange.value = [0, 2000];
+    tempPriceRange.value = [0, 2000];
+    priceFilterApplied.value = false;
+    
+    message.info('已清除价格筛选');
+    
+    // 重新加载
+    fetchCarList();
+};
 
 // 显示的车辆列表
 const carList = ref([]);
 // 加载状态
 const isLoading = ref(false);
-// 是否还有更多数据
-const noMoreData = ref(false);
-// 当前加载的索引
-const currentIndex = ref(0);
-// 每次加载的数量（3行，每行4个）
-const loadSize = 12;
+// 品牌ID映射
+const brandIdMap = ref({});
+// 品牌ID到名称的映射（用于显示）
+const brandNameMap = ref({});
 
-// 初始化加载第一批数据
-const loadInitialData = () => {
-    carList.value = allCarData.slice(0, loadSize);
-    currentIndex.value = loadSize;
+// 获取品牌列表并建立映射
+const fetchBrandList = async () => {
+    try {
+        const response = await brandApi.getBrandList({ pageNum: 1, pageSize: 100 });
+        console.log('品牌列表响应:', response);
+        
+        if (response.code === 200 && response.data) {
+            // 注意：后端使用 Result.page() 返回的数据结构可能是 { records, total } 或直接是数组
+            const brandList = response.data.records || response.data;
+            
+            if (Array.isArray(brandList) && brandList.length > 0) {
+                // 重置品牌列表，保留"全部"选项
+                brands.value = [
+                    { label: '全部', value: 'all', logo: null }
+                ];
+                
+                // 添加从后端获取的品牌
+                brandList.forEach(brand => {
+                    if (brand.id && brand.name) {
+                        // 添加到品牌列表（用于UI显示）
+                        brands.value.push({
+                            label: brand.name,
+                            value: brand.id, // 直接使用品牌ID作为value
+                            logo: brand.logo || null
+                        });
+                        
+                        // 建立ID映射（用于查询）- 支持数字和字符串类型的key
+                        brandIdMap.value[brand.id] = brand.id;
+                        brandIdMap.value[String(brand.id)] = brand.id; // 字符串形式的ID
+                        brandIdMap.value[brand.name] = brand.id;
+                        
+                        // 建立ID到名称的反向映射（用于显示）- 支持数字和字符串类型的key
+                        brandNameMap.value[brand.id] = brand.name;
+                        brandNameMap.value[String(brand.id)] = brand.name; // 字符串形式的ID
+                    }
+                });
+                
+                console.log('品牌列表:', brands.value);
+                console.log('品牌映射表:', brandIdMap.value);
+                console.log('品牌名称映射表:', brandNameMap.value);
+            } else {
+                console.warn('品牌列表为空或格式不正确');
+            }
+        } else {
+            console.error('获取品牌列表失败:', response.msg);
+            message.warning('获取品牌列表失败，将使用默认筛选');
+        }
+    } catch (error) {
+        console.error('获取品牌列表异常:', error);
+        message.warning('获取品牌列表失败，将使用默认筛选');
+    }
 };
 
-// 加载更多数据
-const loadMoreData = () => {
-    if (isLoading.value || noMoreData.value) return;
+// 映射车型值到后端值
+const mapCarType = (type) => {
+    const typeMap = {
+        'sedan': '轿车',
+        'suv': 'SUV',
+        'mpv': 'MPV',
+        'sports': '跑车',
+        'business': '特种车',
+        'off-road': '越野车'
+    };
+    return type === 'all' ? null : typeMap[type] || null;
+};
+
+// 映射动力类型到后端值
+const mapPowerType = (power) => {
+    const powerMap = {
+        'fuel': '纯油',
+        'hybrid': '混动',
+        'phev': '插混',
+        'ev': '纯电'
+    };
+    return power === 'all' ? null : powerMap[power] || null;
+};
+
+// 映射品牌到brandId
+const mapBrandId = (brandValue) => {
+    if (brandValue === 'all' || !brandValue) return null;
+    // 现在 brandValue 直接就是品牌ID（Long类型）
+    return typeof brandValue === 'number' ? brandValue : null;
+};
+
+// 转换后端数据到前端显示格式
+const transformCarData = (car) => {
+    // 处理图片，取第一张
+    const imageUrl = car.images ? car.images.split(',')[0] : 'https://via.placeholder.com/300x200/2c3e50/ffffff?text=Car';
+    
+    // 通过brandId获取品牌名称
+    let brandName = '未知品牌';
+    if (car.brand) {
+        // 如果后端直接返回了brand字段（品牌名称）
+        brandName = car.brand;
+        console.log(`车辆 ${car.name} 使用后端返回的brand字段: ${brandName}`);
+    } else if (car.brandName) {
+        // 如果后端返回了brandName字段
+        brandName = car.brandName;
+        console.log(`车辆 ${car.name} 使用后端返回的brandName字段: ${brandName}`);
+    } else if (car.brandId !== null && car.brandId !== undefined) {
+        // 通过brandId从映射表获取品牌名称
+        // 支持数字或字符串类型的brandId
+        const brandId = car.brandId;
+        if (brandNameMap.value[brandId]) {
+            brandName = brandNameMap.value[brandId];
+            console.log(`车辆 ${car.name} 通过brandId ${brandId} 映射到品牌: ${brandName}`);
+        } else {
+            console.warn(`车辆 ${car.name} 的brandId ${brandId} (类型: ${typeof brandId}) 在映射表中未找到`);
+            console.warn('当前品牌名称映射表:', brandNameMap.value);
+            console.warn('映射表的键类型:', Object.keys(brandNameMap.value).map(k => `${k}(${typeof k})`));
+        }
+    } else {
+        console.warn(`车辆 ${car.name} 没有品牌相关字段 (brand/brandName/brandId):`, car);
+    }
+    
+    return {
+        id: car.id,
+        name: car.name || '未知车辆',
+        brand: brandName,
+        type: car.carType || '轿车',
+        powerType: car.powerType || '纯油',
+        price: car.dailyRent ? parseFloat(car.dailyRent) : 0,
+        rating: car.avgScore ? Math.min(car.avgScore / 2, 5) : 0, // 转换为0-5分制，最高5分
+        ratingCount: 0, // 后端没有评分人数，设为0或使用默认值
+        fuelConsumption: car.fuelConsumption || 0,
+        space: car.seat || 5,
+        image: imageUrl,
+        isHot: car.hotScore && car.hotScore > 40 // 热度评分大于40视为热门
+    };
+};
+
+// 获取车辆列表
+const fetchCarList = async () => {
+    if (isLoading.value) return;
     
     isLoading.value = true;
     
-    // 模拟异步加载
-    setTimeout(() => {
-        const nextData = allCarData.slice(currentIndex.value, currentIndex.value + loadSize);
+    try {
+        // 构建查询参数（使用POST + RequestBody）
+        const params = {};
         
-        if (nextData.length > 0) {
-            carList.value.push(...nextData);
-            currentIndex.value += nextData.length;
-            
-            if (currentIndex.value >= allCarData.length) {
-                noMoreData.value = true;
-            }
-        } else {
-            noMoreData.value = true;
+        // 添加搜索关键字
+        if (searchKeyword.value) {
+            params.keyWord = searchKeyword.value;
         }
         
+        // 添加筛选条件
+        const carType = mapCarType(selectedCarType.value);
+        const powerType = mapPowerType(selectedPowerType.value);
+        const brandId = mapBrandId(selectedBrand.value);
+        
+        if (carType) {
+            params.carType = carType;
+        }
+        if (powerType) {
+            params.powerType = powerType;
+        }
+        if (brandId) {
+            params.brandId = brandId;
+        }
+        
+        // 添加价格筛选（如果已应用）
+        if (priceFilterApplied.value) {
+            if (priceRange.value[0] !== null && priceRange.value[0] !== undefined) {
+                params.minimPrice = priceRange.value[0];
+            }
+            if (priceRange.value[1] !== null && priceRange.value[1] !== undefined) {
+                params.maxPrice = priceRange.value[1];
+            }
+        }
+        
+        // 添加排序参数（0正序，1倒序）
+        switch (selectedSort.value) {
+            case 'rating':
+                params.avgScore = 1; // 倒序，高分在前
+                break;
+            case 'hot':
+                params.hotScore = 1; // 倒序，热度高在前
+                break;
+            case 'price':
+                params.dailyRent = 0; // 正序，价格低在前
+                break;
+            case 'fuel':
+                params.fuelConsumption = 0; // 正序，油耗低在前
+                break;
+            case 'space':
+                params.seat = 1; // 倒序，座位多在前
+                break;
+        }
+        
+        console.log('查询参数:', params);
+        
+        const response = await carApi.globalQuery(params);
+        
+        console.log('车辆列表响应:', response);
+        
+        if (response.code === 200 && response.data) {
+            console.log('开始转换车辆数据，数据量:', response.data.length);
+            console.log('第一条车辆原始数据示例:', response.data[0]);
+            console.log('当前品牌名称映射表:', brandNameMap.value);
+            
+            // 转换数据并直接替换列表
+            carList.value = response.data.map(transformCarData);
+            
+            console.log('转换后的第一条车辆数据:', carList.value[0]);
+        } else {
+            message.error(response.msg || '获取车辆列表失败');
+        }
+    } catch (error) {
+        console.error('获取车辆列表失败:', error);
+        message.error('获取车辆列表失败，请稍后重试');
+    } finally {
         isLoading.value = false;
-    }, 500);
-};
-
-// 监听滚动事件
-const handleScroll = () => {
-    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-    const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
-    const clientHeight = document.documentElement.clientHeight || window.innerHeight;
-    
-    // 当滚动到底部100px时加载更多
-    if (scrollTop + clientHeight >= scrollHeight - 100) {
-        loadMoreData();
     }
 };
+
 
 // 车辆卡片点击
 const handleCarClick = (car) => {
@@ -853,24 +695,39 @@ const goToAdmin = () => {
     router.push('/admin');
 };
 
+// 监听筛选条件和排序变化，自动重新加载
+watch([selectedCarType, selectedBrand, selectedPowerType, selectedSort], () => {
+    // 重新加载
+    fetchCarList();
+});
+
 // 组件挂载时获取用户信息并初始化数据
-onMounted(() => {
+onMounted(async () => {
     // 获取用户信息（包括头像）
     fetchUserInfo();
     
-    // 初始化加载数据
-    loadInitialData();
+    // 先获取品牌列表（等待完成）
+    await fetchBrandList();
     
-    // 添加滚动监听
-    window.addEventListener('scroll', handleScroll);
-});
-
-// 组件卸载时移除监听
-onUnmounted(() => {
-    window.removeEventListener('scroll', handleScroll);
+    // 品牌列表加载完成后，再初始化加载车辆数据
+    fetchCarList();
 });
 </script>
 
 <style scoped>
 /* 样式已移至独立的CSS文件: src/assets/css/index.css */
+
+/* 品牌标签样式 */
+.brand-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.brand-logo {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    border-radius: 2px;
+}
 </style>

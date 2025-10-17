@@ -29,12 +29,20 @@
                         :options="statusFilterOptions"
                     />
                 </n-space>
-                <n-button type="success" @click="handleAdd">
-                    <template #icon>
-                        <n-icon :component="AddOutline" />
-                    </template>
-                    新增车辆
-                </n-button>
+                <n-space>
+                    <n-button type="info" @click="handleUpCars" :loading="upLoading">
+                        <template #icon>
+                            <n-icon :component="CloudUploadOutline" />
+                        </template>
+                        一键上架
+                    </n-button>
+                    <n-button type="success" @click="handleAdd">
+                        <template #icon>
+                            <n-icon :component="AddOutline" />
+                        </template>
+                        新增车辆
+                    </n-button>
+                </n-space>
             </n-space>
 
             <!-- 车辆列表表格 -->
@@ -414,6 +422,7 @@ const brandMap = ref(new Map()); // 用于存储品牌ID到品牌对象的映射
 // 加载状态
 const loading = ref(false);
 const submitLoading = ref(false);
+const upLoading = ref(false);
 
 // 总数据条数
 const totalCount = ref(0);
@@ -930,6 +939,24 @@ const handleDelete = async (id) => {
     } catch (error) {
         console.error('删除车辆失败:', error);
         message.error('删除失败，请检查网络连接');
+    }
+};
+
+// 一键上架车辆到ES
+const handleUpCars = async () => {
+    upLoading.value = true;
+    try {
+        const res = await carApi.upCars();
+        if (res.code === 200) {
+            message.success('上架成功，车辆信息已同步至ES');
+        } else {
+            message.error(res.message || '上架失败');
+        }
+    } catch (error) {
+        console.error('上架车辆失败:', error);
+        message.error('上架失败，请检查网络连接');
+    } finally {
+        upLoading.value = false;
     }
 };
 
