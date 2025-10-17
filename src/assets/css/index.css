@@ -79,9 +79,9 @@
     left: 0;
     right: 0;
     z-index: 999;
-    background: #18181c;
+    background-color: #18181c;
     padding: 16px 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); */
 }
 
 .search-section .n-input-group {

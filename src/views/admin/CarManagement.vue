@@ -801,6 +801,11 @@ const fetchCarList = async () => {
             params.keyWord = searchParams.keyWord;
         }
         
+        // 添加状态筛选参数（status可以为0，所以需要判断是否为null/undefined）
+        if (searchParams.status !== null && searchParams.status !== undefined) {
+            params.status = searchParams.status;
+        }
+        
         const res = await carApi.getCarList(params);
         
         if (res.code === 200) {
