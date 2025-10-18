@@ -161,6 +161,9 @@ export const carApi = {
   
   // 管理员一键上架车辆到ES
   upCars: () => post(`/rental/car/admin/up`),
+  
+  // 获取车辆详情
+  getCarDetail: (id) => get(`/rental/car/detail/${id}`),
 };
 
 /**
@@ -174,6 +177,29 @@ export const brandApi = {
   getBrandById: (id) => get(`/rental/brand/${id}`),
 };
 
+/**
+ * 评论管理相关API
+ */
+export const commentApi = {
+  // 管理员新增/回复评论
+  addComment: (data) => post(`/rental/comment/admin/add`, data),
+  
+  // 用户新增/回复评论
+  userAddComment: (data) => post(`/rental/comment/user/add`, data),
+  
+  // 管理员删除评论
+  deleteComment: (id) => put(`/rental/comment/admin/delete?id=${id}`),
+  
+  // 管理员获取评论列表（支持分页和关键字搜索）
+  getCommentList: (params) => get(`/rental/comment/admin/list`, params),
+  
+  // 用户获取车辆评论信息
+  getCarComments: (params) => get(`/rental/comment/user/list`, params),
+  
+  // 用户加载评论回复
+  loadReply: (params) => get(`/rental/comment/user/loadReply`, params),
+};
+
 // 导出所有API
 export default {
   userApi,
@@ -184,4 +210,5 @@ export default {
   configApi,
   carApi,
   brandApi,
+  commentApi,
 };

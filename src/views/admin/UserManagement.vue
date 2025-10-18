@@ -35,6 +35,7 @@
                 :pagination="pagination"
                 :bordered="false"
                 :single-line="false"
+                remote
             />
         </n-space>
 
@@ -406,7 +407,8 @@ const fetchUserList = async () => {
 
         if (response.code === 200) {
             userList.value = response.data || [];
-            pagination.itemCount = response.total || 0;
+            // API返回的总数字段是count，不是total
+            pagination.itemCount = response.count || 0;
         } else {
             message.error(response.message || '获取用户列表失败');
         }

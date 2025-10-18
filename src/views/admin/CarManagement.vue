@@ -53,8 +53,7 @@
                 :pagination="paginationReactive"
                 :bordered="false"
                 :single-line="false"
-                @update:page="handlePageChange"
-                @update:page-size="handlePageSizeChange"
+                remote
             />
         </n-space>
 
@@ -152,7 +151,7 @@
                     <n-grid cols="2" x-gap="12">
                         <n-gi>
                             <n-form-item label="座位数">
-                                <n-input-number v-model:value="formData.seat" placeholder="请输入座位数" style="width: 100%" :min="2" :max="9" />
+                                <n-input-number v-model:value="formData.seat" placeholder="请输入座位数" style="width: 100%" :min="1" :max="1000" />
                             </n-form-item>
                         </n-gi>
                         <n-gi>
@@ -434,7 +433,17 @@ const paginationReactive = reactive({
     itemCount: 0,
     showSizePicker: true,
     pageSizes: [10, 20, 50, 100],
-    prefix: (info) => `共 ${info.itemCount} 条`
+    prefix: (info) => `共 ${info.itemCount} 条`,
+    onChange: (page) => {
+        searchParams.pageNum = page;
+        fetchCarList();
+    },
+    onUpdatePageSize: (pageSize) => {
+        searchParams.pageSize = pageSize;
+        searchParams.pageNum = 1;
+        paginationReactive.page = 1;
+        fetchCarList();
+    }
 });
 
 // 状态筛选选项
@@ -810,8 +819,9 @@ const fetchCarList = async () => {
         
         if (res.code === 200) {
             carList.value = res.data || [];
-            totalCount.value = res.total || 0;
-            paginationReactive.itemCount = res.total || 0;
+            // API返回的总数字段是count，不是total
+            totalCount.value = res.count || 0;
+            paginationReactive.itemCount = res.count || 0;
             paginationReactive.page = searchParams.pageNum;
             
             // 加载表格中出现的品牌信息（用于显示品牌名称）
@@ -859,20 +869,6 @@ const loadBrandsForTable = async () => {
 
 // 搜索
 const handleSearch = () => {
-    searchParams.pageNum = 1;
-    paginationReactive.page = 1;
-    fetchCarList();
-};
-
-// 分页变化
-const handlePageChange = (page) => {
-    searchParams.pageNum = page;
-    fetchCarList();
-};
-
-// 每页数量变化
-const handlePageSizeChange = (pageSize) => {
-    searchParams.pageSize = pageSize;
     searchParams.pageNum = 1;
     paginationReactive.page = 1;
     fetchCarList();

@@ -654,7 +654,7 @@ const fetchCarList = async () => {
 
 // 车辆卡片点击
 const handleCarClick = (car) => {
-    message.info(`查看 ${car.name} 详情`);
+    router.push(`/car/${car.id}`);
 };
 
 // 获取用户信息
