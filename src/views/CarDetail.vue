@@ -209,7 +209,7 @@
                         </n-card>
 
                         <!-- 评论区 -->
-                        <n-card :bordered="false" class="comment-section">
+                        <n-card :bordered="false" class="comment-section" ref="commentSectionRef">
                             <div class="comment-header">
                                 <div>
                                     <h2 class="section-title" style="margin: 0;">
@@ -322,8 +322,8 @@
                                             </div>
 
                                             <!-- 回复区域 -->
-                                            <div class="reply-section" v-if="comment.replyList && comment.replyList.length > 0">
-                                                <div class="reply-list">
+                                            <div class="reply-section" v-if="comment.replyList.length > 0 || comment.replyCount > 0">
+                                                <div class="reply-list" v-if="comment.replyList.length > 0">
                                                     <div 
                                                         v-for="(reply, index) in getVisibleReplies(comment)" 
                                                         :key="reply.id"
@@ -340,16 +340,31 @@
                                                         <div class="reply-content">
                                                             <div class="reply-header">
                                                                 <span class="reply-username">{{ reply.username }}</span>
+                                                                <template v-if="reply.followUsername">
+                                                                    <span class="reply-arrow">回复</span>
+                                                                    <span class="reply-target-username">@{{ reply.followUsername }}</span>
+                                                                </template>
                                                                 <span class="reply-time">{{ formatTime(reply.createTime) }}</span>
                                                             </div>
                                                             <div class="reply-text">{{ reply.content }}</div>
+                                                            <div class="comment-actions">
+                                                                <button 
+                                                                    class="comment-action-btn"
+                                                                    @click="handleReplyClick(reply)"
+                                                                >
+                                                                    <n-icon :component="ChatbubbleOutline" size="16" />
+                                                                    回复
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <!-- 查看更多回复按钮 -->
                                                 <div class="load-more-replies" v-if="shouldShowLoadMore(comment)">
+                                                    <!-- 如果还没加载完所有回复 -->
                                                     <n-button 
+                                                        v-if="!comment.allRepliesLoaded"
                                                         text 
                                                         type="primary"
                                                         @click="handleLoadMoreReplies(comment)"
@@ -358,8 +373,13 @@
                                                         <template #icon>
                                                             <n-icon :component="ChevronDownOutline" />
                                                         </template>
-                                                        查看更多回复 ({{ comment.replyCount - getVisibleReplies(comment).length }})
+                                                        {{ comment.replyPage === 0 ? `查看更多回复` : '加载更多回复' }}
                                                     </n-button>
+                                                    <!-- 如果已加载完成 -->
+                                                    <div v-else class="all-replies-loaded">
+                                                        <n-icon :component="CheckmarkCircleOutline" size="16" />
+                                                        已显示全部回复
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -368,7 +388,7 @@
                                                 <n-input
                                                     v-model:value="replyContent"
                                                     type="textarea"
-                                                    :placeholder="`回复 ${comment.username}...`"
+                                                    :placeholder="`回复 ${replyTargetComment?.username || comment.username}...`"
                                                     :autosize="{
                                                         minRows: 2,
                                                         maxRows: 4
@@ -381,7 +401,7 @@
                                                     <n-button 
                                                         type="primary" 
                                                         size="small"
-                                                        @click="handlePostReply(comment)"
+                                                        @click="handlePostReply(replyTargetComment || comment)"
                                                         :loading="isPostingReply"
                                                         :disabled="!replyContent.trim()"
                                                     >
@@ -406,17 +426,23 @@
                                 <span>加载评论中...</span>
                             </div>
 
-                            <!-- 分页 -->
-                            <div class="comment-pagination" v-if="totalComments > commentPageSize">
-                                <n-pagination
-                                    v-model:page="commentPage"
-                                    :page-count="Math.ceil(totalComments / commentPageSize)"
-                                    :page-size="commentPageSize"
-                                    show-size-picker
-                                    :page-sizes="[10, 20, 30, 50]"
-                                    @update:page="handleCommentPageChange"
-                                    @update:page-size="handleCommentPageSizeChange"
-                                />
+                            <!-- 自动加载提示 -->
+                            <div class="load-more-comments" v-if="commentList.length > 0">
+                                <!-- 正在加载更多 -->
+                                <div v-if="isLoadingMoreComments" class="auto-loading">
+                                    <n-spin size="small" />
+                                    <span>正在加载更多评论...</span>
+                                </div>
+                                <!-- 已加载完成 -->
+                                <div v-else-if="allCommentsLoaded && commentPage > 0" class="all-comments-loaded">
+                                    <n-icon :component="CheckmarkCircleOutline" size="16" />
+                                    已显示全部评论
+                                </div>
+                                <!-- 提示向下滚动加载 -->
+                                <div v-else-if="!allCommentsLoaded && totalComments > commentList.length" class="scroll-tip">
+                                    <n-icon :component="ChevronDownOutline" size="16" />
+                                    <span>向下滚动加载更多 (还有 {{ totalComments - commentList.length }} 条)</span>
+                                </div>
                             </div>
                         </n-card>
                     </div>
@@ -433,7 +459,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useMessage, darkTheme } from 'naive-ui';
 import {
@@ -449,7 +475,6 @@ import {
     NImage,
     NInput,
     NSpin,
-    NPagination,
     NConfigProvider
 } from 'naive-ui';
 import {
@@ -465,7 +490,8 @@ import {
     ChevronDownOutline,
     CartOutline,
     HeartOutline,
-    FlameOutline
+    FlameOutline,
+    CheckmarkCircleOutline
 } from '@vicons/ionicons5';
 
 // 引入样式
@@ -498,9 +524,10 @@ const carRating = computed(() => {
 // 评论相关
 const commentList = ref([]);
 const totalComments = ref(0);
-const commentPage = ref(1);
-const commentPageSize = ref(10);
+const commentPage = ref(0); // 0 表示还未开始分页加载，1+ 表示已经开始分页
 const isLoadingComments = ref(false);
+const isLoadingMoreComments = ref(false);
+const allCommentsLoaded = ref(false); // 是否已加载所有评论
 
 // 发布评论
 const newComment = ref({
@@ -509,8 +536,12 @@ const newComment = ref({
 });
 const isPostingComment = ref(false);
 
+// 滚动监听相关
+const commentSectionRef = ref(null); // 评论区域的引用
+
 // 回复相关
-const replyingCommentId = ref(null);
+const replyingCommentId = ref(null); // 顶级评论的ID（用于定位输入框位置）
+const replyTargetComment = ref(null); // 回复目标的评论对象（可能是顶级评论或回复）
 const replyContent = ref('');
 const isPostingReply = ref(false);
 
@@ -530,7 +561,7 @@ const fetchCarDetail = async () => {
     isLoading.value = true;
     try {
         const response = await carApi.getCarDetail(carId);
-        console.log('车辆详情响应:', response);
+        // console.log('车辆详情响应:', response);
         
         if (response.code === 200 && response.data) {
             carDetail.value = response.data;
@@ -545,19 +576,66 @@ const fetchCarDetail = async () => {
                 imageList.value = ['https://via.placeholder.com/800x600/2c3e50/ffffff?text=Car'];
             }
             
-            console.log('图片列表:', imageList.value);
+            // console.log('图片列表:', imageList.value);
         } else {
             message.error(response.msg || '获取车辆详情失败');
         }
     } catch (error) {
-        console.error('获取车辆详情失败:', error);
+        // console.error('获取车辆详情失败:', error);
         message.error('获取车辆详情失败');
     } finally {
         isLoading.value = false;
     }
 };
 
-// 获取评论列表
+// 处理单个评论的回复列表
+const processCommentReplies = (comment) => {
+    // 后端返回的回复在 children 字段中
+    const { children, ...commentWithoutChildren } = comment;
+    const allReplies = children || [];
+    const replyCount = allReplies.length;
+    
+    // 为每个回复添加被回复人的用户名
+    const processedReplies = allReplies.map(reply => {
+        let followUsername = null;
+        
+        // 只有当 parentCommentId 和 followCommentId 不同时才显示回复关系
+        // 如果相同，说明是直接回复父评论，父子结构已经表明了回复关系
+        if (reply.followCommentId && reply.followCommentId !== 0 && 
+            reply.parentCommentId !== reply.followCommentId) {
+            // 如果回复的是顶级评论
+            if (reply.followCommentId === comment.id) {
+                followUsername = comment.username;
+            } else {
+                // 如果回复的是其他回复，从 allReplies 中查找
+                const targetReply = allReplies.find(r => r.id === reply.followCommentId);
+                if (targetReply) {
+                    followUsername = targetReply.username;
+                }
+            }
+        }
+        
+        return {
+            ...reply,
+            followUsername: followUsername
+        };
+    });
+    
+    // 规则：如果回复数>=3，初始显示前2条；否则显示全部
+    const initialReplies = replyCount >= 3 ? processedReplies.slice(0, 2) : processedReplies;
+    
+    return {
+        ...commentWithoutChildren,
+        replyList: initialReplies, // 初始显示的回复（2条或全部）
+        allReplies: processedReplies, // 保存所有初始回复数据（用于查找followUsername）
+        replyCount: replyCount, // 总回复数
+        isLoadingReplies: false,
+        replyPage: 0, // 0表示还未开始分页加载，1+表示已经开始分页
+        allRepliesLoaded: replyCount < 3 // 如果初始<3条，已全部加载
+    };
+};
+
+// 获取初始评论列表（固定5条）
 const fetchComments = async () => {
     const carId = route.params.id;
     if (!carId) return;
@@ -565,43 +643,38 @@ const fetchComments = async () => {
     isLoadingComments.value = true;
     try {
         const response = await commentApi.getCarComments({
-            carId,
-            pageNum: commentPage.value,
-            pageSize: commentPageSize.value
+            carId: parseInt(carId)
         });
         
-        console.log('评论列表响应:', response);
+        // console.log('初始评论列表响应:', response);
         
         if (response.code === 200 && response.data) {
             const comments = Array.isArray(response.data) ? response.data : response.data.records || [];
             
             // 处理每个评论，初始化回复相关字段
-            commentList.value = comments.map(comment => {
-                const replyList = comment.replyList || [];
-                const replyCount = comment.replyCount || 0;
-                
-                return {
-                    ...comment,
-                    replyList: replyList,
-                    replyCount: replyCount,
-                    showAllReplies: false,
-                    isLoadingReplies: false,
-                    replyPage: 1,
-                    // 如果实际回复数大于已加载的回复数，说明还有更多
-                    hasMoreReplies: replyCount > replyList.length
-                };
-            });
+            commentList.value = comments.map(comment => processCommentReplies(comment));
             
+            // 从响应中获取总数，如果没有则使用评论数量
             totalComments.value = response.data.total || comments.length;
             
-            console.log('处理后的评论列表:', commentList.value);
-            console.log('评论详情:', commentList.value.map(c => ({
-                id: c.id,
-                content: c.content,
-                replyCount: c.replyCount,
-                replyListLength: c.replyList.length,
-                hasMoreReplies: c.hasMoreReplies
-            })));
+            // 重置页码和加载状态
+            commentPage.value = 0;
+            
+            // 判断是否已全部加载：
+            // 1. 如果返回 < 5条，说明总数就这么多，已全部加载
+            // 2. 如果返回 = 5条，且有total字段且total === 5，说明已全部加载
+            // 3. 其他情况，可能还有更多
+            if (comments.length < 5) {
+                allCommentsLoaded.value = true;
+            } else if (comments.length === 5 && response.data.total === 5) {
+                allCommentsLoaded.value = true;
+            } else {
+                allCommentsLoaded.value = false;
+            }
+            
+            // console.log('处理后的评论列表:', commentList.value);
+            // console.log('总评论数:', totalComments.value);
+            // console.log('是否已全部加载:', allCommentsLoaded.value);
         } else {
             message.error(response.msg || '获取评论列表失败');
         }
@@ -610,6 +683,77 @@ const fetchComments = async () => {
         message.error('获取评论列表失败');
     } finally {
         isLoadingComments.value = false;
+    }
+};
+
+// 加载更多评论
+const handleLoadMoreComments = async () => {
+    const carId = route.params.id;
+    if (!carId) return;
+
+    isLoadingMoreComments.value = true;
+    try {
+        // 下一页页码
+        const nextPage = commentPage.value + 1;
+        
+        // console.log(`加载更多评论，请求第 ${nextPage} 页`);
+        
+        const response = await commentApi.loadMoreComments({
+            carId: parseInt(carId),
+            pageNum: nextPage,
+            pageSize: 10
+        });
+        
+        // console.log('加载更多评论响应:', response);
+        
+        if (response.code === 200 && response.data) {
+            const newComments = Array.isArray(response.data) ? response.data : response.data.records || [];
+            
+            // console.log(`本次加载评论数量: ${newComments.length}条`);
+            
+            // 处理新评论
+            const processedComments = newComments.map(comment => processCommentReplies(comment));
+            
+            // 规则：如果是第一次点击加载更多（commentPage === 0），用10条替换原有的5条
+            if (commentPage.value === 0) {
+                commentList.value = processedComments;
+                // console.log('第一次加载更多，替换原有的5条评论');
+            } else {
+                // 后续点击，追加到现有列表
+                commentList.value = [...commentList.value, ...processedComments];
+                // console.log('追加到现有评论列表');
+            }
+            
+            // 更新页码
+            commentPage.value = nextPage;
+            
+            // 判断是否已加载完成
+            // 如果返回的数据 <= 9条，说明没有更多了
+            if (newComments.length <= 9) {
+                allCommentsLoaded.value = true;
+                // console.log('所有评论已加载完成：返回数据 <= 9条');
+            } else {
+                allCommentsLoaded.value = false;
+                // console.log('还有更多评论可加载');
+            }
+            
+            // 更新总评论数
+            if (response.data.total !== undefined) {
+                totalComments.value = response.data.total;
+            }
+            
+            // console.log('更新后的评论列表长度:', commentList.value.length);
+            // console.log('当前页码:', commentPage.value);
+            // console.log('总评论数:', totalComments.value);
+            // console.log('是否已加载完成:', allCommentsLoaded.value);
+        } else {
+            message.error(response.msg || '加载更多评论失败');
+        }
+    } catch (error) {
+        console.error('加载更多评论失败:', error);
+        message.error('加载更多评论失败');
+    } finally {
+        isLoadingMoreComments.value = false;
     }
 };
 
@@ -635,7 +779,7 @@ const handlePostComment = async () => {
             followCommentId: 0  // 非回复评论
         });
         
-        console.log('发布评论响应:', response);
+        // console.log('发布评论响应:', response);
         
         if (response.code === 200) {
             message.success('评论发布成功，等待AI审核中...');
@@ -646,14 +790,13 @@ const handlePostComment = async () => {
                 score: 5
             };
             
-            // 重新加载评论列表
-            commentPage.value = 1;
+            // 重新加载初始评论列表
             await fetchComments();
         } else {
             message.error(response.msg || '发布评论失败');
         }
     } catch (error) {
-        console.error('发布评论失败:', error);
+        // console.error('发布评论失败:', error);
         message.error('发布评论失败');
     } finally {
         isPostingComment.value = false;
@@ -662,13 +805,17 @@ const handlePostComment = async () => {
 
 // 点击回复按钮
 const handleReplyClick = (comment) => {
-    replyingCommentId.value = comment.id;
+    // 如果是顶级评论（parentCommentId === 0），则 replyingCommentId 就是它的 id
+    // 如果是回复（parentCommentId !== 0），则 replyingCommentId 是它的 parentCommentId
+    replyingCommentId.value = comment.parentCommentId === 0 ? comment.id : comment.parentCommentId;
+    replyTargetComment.value = comment;
     replyContent.value = '';
 };
 
 // 取消回复
 const cancelReply = () => {
     replyingCommentId.value = null;
+    replyTargetComment.value = null;
     replyContent.value = '';
 };
 
@@ -698,7 +845,7 @@ const handlePostReply = async (comment) => {
             followCommentId: comment.id       // 被回复的评论ID
         });
         
-        console.log('发布回复响应:', response);
+        // console.log('发布回复响应:', response);
         
         if (response.code === 200) {
             message.success('回复发布成功，等待AI审核中...');
@@ -712,7 +859,7 @@ const handlePostReply = async (comment) => {
             message.error(response.msg || '发布回复失败');
         }
     } catch (error) {
-        console.error('发布回复失败:', error);
+        // console.error('发布回复失败:', error);
         message.error('发布回复失败');
     } finally {
         isPostingReply.value = false;
@@ -725,79 +872,201 @@ const getVisibleReplies = (comment) => {
         return [];
     }
     
-    // 如果显示全部回复，返回所有回复
-    if (comment.showAllReplies) {
+    // 规则1：如果回复数<3，显示全部（初始就已经全部显示）
+    if (comment.replyCount < 3) {
         return comment.replyList;
     }
     
-    // 否则只显示前2条
-    return comment.replyList.slice(0, 2);
-};
-
-// 是否显示"查看更多回复"按钮
-const shouldShowLoadMore = (comment) => {
-    if (!comment.replyList || comment.replyList.length === 0) {
-        return false;
+    // 规则2：如果还未开始分页加载（replyPage === 0），只显示初始的2条
+    if (comment.replyPage === 0) {
+        return comment.replyList; // 初始只有2条
     }
     
-    // 如果还有更多回复未加载，或者已加载的回复多于2条且未全部显示
-    return comment.hasMoreReplies || (!comment.showAllReplies && comment.replyList.length > 2);
+    // 规则3：已经开始分页加载
+    // 如果已加载完成，显示所有
+    if (comment.allRepliesLoaded) {
+        return comment.replyList;
+    }
+    
+    // 规则4：如果还未加载完成，折叠最后一条
+    // 显示前 n-1 条，最后一条折叠
+    return comment.replyList.slice(0, comment.replyList.length - 1);
+};
+
+// 是否显示"加载更多回复"区域（包括按钮或已加载完成提示）
+const shouldShowLoadMore = (comment) => {
+    // 只有当回复数 >= 3 时才显示加载更多区域
+    // 如果回复数 < 3，初始就已经显示全部了，不需要加载更多
+    return comment.replyCount >= 3;
+};
+
+// 处理回复的 followUsername
+const processReplyFollowUsername = (reply, comment) => {
+    let followUsername = null;
+    
+    // 只有当 parentCommentId 和 followCommentId 不同时才显示回复关系
+    // 如果相同，说明是直接回复父评论，父子结构已经表明了回复关系
+    if (reply.followCommentId && reply.followCommentId !== 0 && 
+        reply.parentCommentId !== reply.followCommentId) {
+        // 如果回复的是顶级评论
+        if (reply.followCommentId === comment.id) {
+            followUsername = comment.username;
+        } else {
+            // 如果回复的是其他回复，从已加载的回复列表和所有回复中查找
+            const allCurrentReplies = [...comment.replyList, ...comment.allReplies];
+            const targetReply = allCurrentReplies.find(r => r.id === reply.followCommentId);
+            if (targetReply) {
+                followUsername = targetReply.username;
+            }
+        }
+    }
+    
+    return {
+        ...reply,
+        followUsername: followUsername
+    };
 };
 
 // 加载更多回复
 const handleLoadMoreReplies = async (comment) => {
-    // 如果还有更多回复未加载，则从服务器加载
-    if (comment.hasMoreReplies) {
-        comment.isLoadingReplies = true;
-        try {
-            const response = await commentApi.loadReply({
-                id: comment.id,
-                pageNum: comment.replyPage + 1,
-                pageSize: 5
-            });
+    comment.isLoadingReplies = true;
+    try {
+        // 下一页页码
+        const nextPage = comment.replyPage + 1;
+        
+        // console.log(`加载评论 ${comment.id} 的回复，请求第 ${nextPage} 页`);
+        
+        const response = await commentApi.loadReply({
+            id: comment.id,
+            pageNum: nextPage,
+            pageSize: 5
+        });
+        
+        // console.log('加载回复响应:', response);
+        
+        if (response.code === 200 && response.data) {
+            const newReplies = Array.isArray(response.data) ? response.data : response.data.records || [];
             
-            console.log('加载回复响应:', response);
+            // console.log(`本次加载数量: ${newReplies.length}条`);
             
-            if (response.code === 200 && response.data) {
-                const newReplies = Array.isArray(response.data) ? response.data : response.data.records || [];
-                
-                // 追加新的回复
-                comment.replyList = [...comment.replyList, ...newReplies];
-                comment.replyPage++;
-                
-                // 判断是否还有更多
-                comment.hasMoreReplies = comment.replyList.length < comment.replyCount;
-                
-                // 显示所有已加载的回复
-                comment.showAllReplies = true;
-                
-                console.log('更新后的回复列表:', comment.replyList);
-                console.log('是否还有更多:', comment.hasMoreReplies);
+            // 处理新回复的 followUsername
+            const processedNewReplies = newReplies.map(reply => processReplyFollowUsername(reply, comment));
+            
+            // 规则1：如果是第一次点击加载（replyPage === 0），替换现有的回复列表
+            if (comment.replyPage === 0) {
+                comment.replyList = processedNewReplies;
+                // console.log('第一次分页加载，替换初始回复列表');
             } else {
-                message.error(response.msg || '加载回复失败');
+                // 规则2：如果已经在分页中，追加到现有列表
+                comment.replyList = [...comment.replyList, ...processedNewReplies];
+                // console.log('追加到现有回复列表');
             }
-        } catch (error) {
-            console.error('加载回复失败:', error);
-            message.error('加载回复失败');
-        } finally {
-            comment.isLoadingReplies = false;
+            
+            // 更新页码
+            comment.replyPage = nextPage;
+            
+            // 规则3：判断是否已加载完成
+            // 如果返回的数据 <= 4条，说明没有更多了
+            if (newReplies.length <= 4) {
+                comment.allRepliesLoaded = true;
+                // console.log('已加载完成：本次返回 <=4 条');
+            } else {
+                comment.allRepliesLoaded = false;
+                // console.log('还有更多回复可加载');
+            }
+            
+            // console.log('更新后的回复列表长度:', comment.replyList.length);
+            // console.log('当前页码:', comment.replyPage);
+            // console.log('是否已加载完成:', comment.allRepliesLoaded);
+        } else {
+            message.error(response.msg || '加载回复失败');
         }
-    } else {
-        // 否则只是展开显示已加载的回复
-        comment.showAllReplies = true;
+    } catch (error) {
+        // console.error('加载回复失败:', error);
+        message.error('加载回复失败');
+    } finally {
+        comment.isLoadingReplies = false;
     }
 };
 
-// 评论分页变化
-const handleCommentPageChange = (page) => {
-    commentPage.value = page;
-    fetchComments();
+// 滚动监听处理函数
+const handleScroll = () => {
+    console.log('滚动事件触发');
+    
+    // 如果正在加载，不触发
+    if (isLoadingMoreComments.value) {
+        console.log('正在加载中，跳过');
+        return;
+    }
+    
+    // 如果已加载完成，不触发
+    if (allCommentsLoaded.value) {
+        console.log('已加载完成，跳过');
+        return;
+    }
+    
+    // 如果没有评论，不触发
+    if (commentList.value.length === 0) {
+        console.log('没有评论，跳过');
+        return;
+    }
+    
+    // 检测方式1：使用页面总高度和滚动位置
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    
+    const distanceToBottom = documentHeight - scrollTop - windowHeight;
+    
+    console.log('滚动检测(方式1-页面):', { 
+        scrollTop,
+        windowHeight, 
+        documentHeight,
+        distanceToBottom,
+        commentListLength: commentList.value.length,
+        totalComments: totalComments.value
+    });
+    
+    // 距离底部小于500px时触发
+    if (distanceToBottom < 500) {
+        console.log('触发加载更多评论');
+        handleLoadMoreComments();
+        return;
+    }
+    
+    // 检测方式2：使用评论区域的位置（作为备选）
+    if (commentSectionRef.value) {
+        const element = commentSectionRef.value.$el || commentSectionRef.value;
+        const rect = element.getBoundingClientRect();
+        const elementBottom = rect.bottom;
+        
+        const distanceToViewportBottom = elementBottom - windowHeight;
+        
+        console.log('滚动检测(方式2-评论区):', { 
+            elementBottom, 
+            windowHeight, 
+            distanceToViewportBottom
+        });
+        
+        if (distanceToViewportBottom < 300) {
+            console.log('触发加载更多评论(方式2)');
+            handleLoadMoreComments();
+        }
+    }
 };
 
-const handleCommentPageSizeChange = (pageSize) => {
-    commentPageSize.value = pageSize;
-    commentPage.value = 1;
-    fetchComments();
+// 使用节流优化滚动性能（改为节流，更适合无限滚动）
+let scrollTimer = null;
+let isScrolling = false;
+const handleScrollDebounced = () => {
+    if (isScrolling) return;
+    
+    isScrolling = true;
+    handleScroll();
+    
+    setTimeout(() => {
+        isScrolling = false;
+    }, 300);
 };
 
 // 格式化时间（相对时间）
@@ -865,6 +1134,20 @@ const handleRent = () => {
 onMounted(async () => {
     await fetchCarDetail();
     await fetchComments();
+    
+    // 等待 DOM 更新后添加滚动监听（监听整个页面滚动）
+    await nextTick();
+    window.addEventListener('scroll', handleScrollDebounced);
+    console.log('页面滚动监听已添加');
+    console.log('commentSectionRef:', commentSectionRef.value);
+});
+
+// 组件卸载时移除滚动监听
+onUnmounted(() => {
+    window.removeEventListener('scroll', handleScrollDebounced);
+    if (scrollTimer) {
+        clearTimeout(scrollTimer);
+    }
 });
 </script>
 

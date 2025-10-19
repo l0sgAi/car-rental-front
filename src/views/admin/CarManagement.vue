@@ -316,7 +316,7 @@
                     <n-grid cols="2" x-gap="12">
                         <n-gi>
                             <n-form-item label="热度评分">
-                                <n-input-number v-model:value="formData.hotScore" placeholder="热度评分" style="width: 100%" :min="0" :max="100" />
+                                <n-input-number v-model:value="formData.hotScore" placeholder="热度评分" style="width: 100%" :min="0" :max="50000" />
                             </n-form-item>
                         </n-gi>
                         <n-gi>

@@ -193,8 +193,11 @@ export const commentApi = {
   // 管理员获取评论列表（支持分页和关键字搜索）
   getCommentList: (params) => get(`/rental/comment/admin/list`, params),
   
-  // 用户获取车辆评论信息
+  // 用户获取车辆评论信息（初始）
   getCarComments: (params) => get(`/rental/comment/user/list`, params),
+  
+  // 用户加载更多评论
+  loadMoreComments: (params) => get(`/rental/comment/user/moreComment`, params),
   
   // 用户加载评论回复
   loadReply: (params) => get(`/rental/comment/user/loadReply`, params),
