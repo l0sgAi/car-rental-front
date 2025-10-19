@@ -148,7 +148,6 @@ const login = (e) => {
                         localStorage.setItem('tokenName', res.data.tokenName);
                         localStorage.setItem('tokenValue', res.data.tokenValue);
                         localStorage.setItem('isLoggedIn', 'true');
-                        console.log('保存token信息完成:', res.data);
                     }
 
                     message.success('登录成功');
@@ -157,7 +156,6 @@ const login = (e) => {
             } catch (error) {
                 // 处理登录失败
                 errorMessage.value = error.message || '登录失败，请检查用户名和密码';
-                console.error('登录失败:', error);
                 // 刷新验证码
                 refreshCaptcha();
             }

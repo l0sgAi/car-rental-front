@@ -149,7 +149,7 @@
                                 <n-input-number
                                     v-model:value="tempPriceRange[1]"
                                     :min="tempPriceRange[0]"
-                                    :max="5000"
+                                    :max="15000"
                                     :step="50"
                                     placeholder="最高价格"
                                     style="width: 150px"
@@ -390,7 +390,7 @@ const selectedSort = ref('hot');
 
 // 搜索处理
 const handleSearch = () => {
-    // console.log('搜索关键词:', searchKeyword.value);
+    // //('搜索关键词:', searchKeyword.value);
     // message.info(`搜索: ${searchKeyword.value || '全部车辆'}`);
     // 重新加载
     fetchCarList();
@@ -439,7 +439,7 @@ const brandNameMap = ref({});
 const fetchBrandList = async () => {
     try {
         const response = await brandApi.getBrandList({ pageNum: 1, pageSize: 100 });
-        console.log('品牌列表响应:', response);
+        //('品牌列表响应:', response);
         
         if (response.code === 200 && response.data) {
             // 注意：后端使用 Result.page() 返回的数据结构可能是 { records, total } 或直接是数组
@@ -472,9 +472,9 @@ const fetchBrandList = async () => {
                     }
                 });
                 
-                console.log('品牌列表:', brands.value);
-                console.log('品牌映射表:', brandIdMap.value);
-                console.log('品牌名称映射表:', brandNameMap.value);
+                //('品牌列表:', brands.value);
+                //('品牌映射表:', brandIdMap.value);
+                //('品牌名称映射表:', brandNameMap.value);
             } else {
                 console.warn('品牌列表为空或格式不正确');
             }
@@ -529,18 +529,18 @@ const transformCarData = (car) => {
     if (car.brand) {
         // 如果后端直接返回了brand字段（品牌名称）
         brandName = car.brand;
-        console.log(`车辆 ${car.name} 使用后端返回的brand字段: ${brandName}`);
+        //(`车辆 ${car.name} 使用后端返回的brand字段: ${brandName}`);
     } else if (car.brandName) {
         // 如果后端返回了brandName字段
         brandName = car.brandName;
-        console.log(`车辆 ${car.name} 使用后端返回的brandName字段: ${brandName}`);
+        //(`车辆 ${car.name} 使用后端返回的brandName字段: ${brandName}`);
     } else if (car.brandId !== null && car.brandId !== undefined) {
         // 通过brandId从映射表获取品牌名称
         // 支持数字或字符串类型的brandId
         const brandId = car.brandId;
         if (brandNameMap.value[brandId]) {
             brandName = brandNameMap.value[brandId];
-            console.log(`车辆 ${car.name} 通过brandId ${brandId} 映射到品牌: ${brandName}`);
+            //(`车辆 ${car.name} 通过brandId ${brandId} 映射到品牌: ${brandName}`);
         } else {
             console.warn(`车辆 ${car.name} 的brandId ${brandId} (类型: ${typeof brandId}) 在映射表中未找到`);
             console.warn('当前品牌名称映射表:', brandNameMap.value);
@@ -625,21 +625,21 @@ const fetchCarList = async () => {
                 break;
         }
         
-        console.log('查询参数:', params);
+        //('查询参数:', params);
         
         const response = await carApi.globalQuery(params);
         
-        console.log('车辆列表响应:', response);
+        //('车辆列表响应:', response);
         
         if (response.code === 200 && response.data) {
-            console.log('开始转换车辆数据，数据量:', response.data.length);
-            console.log('第一条车辆原始数据示例:', response.data[0]);
-            console.log('当前品牌名称映射表:', brandNameMap.value);
+            //('开始转换车辆数据，数据量:', response.data.length);
+            //('第一条车辆原始数据示例:', response.data[0]);
+            //('当前品牌名称映射表:', brandNameMap.value);
             
             // 转换数据并直接替换列表
             carList.value = response.data.map(transformCarData);
             
-            console.log('转换后的第一条车辆数据:', carList.value[0]);
+            //('转换后的第一条车辆数据:', carList.value[0]);
         } else {
             message.error(response.msg || '获取车辆列表失败');
         }

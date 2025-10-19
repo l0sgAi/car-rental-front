@@ -62,7 +62,7 @@ export const chatApi = {
       url += `?${tokenName}=${encodeURIComponent(tokenValue)}`;
     }
     
-    console.log('SSE连接URL:', url); // 添加调试日志
+    //('SSE连接URL:', url); // 添加调试日志
     return new EventSource(url);
   },
 };

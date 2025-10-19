@@ -64,7 +64,7 @@
 
                                     <div class="price-section">
                                         <div class="price-label">租赁价格</div>
-                                        <div class="price-value">
+                                        <div class="price-value-d">
                                             <span>¥</span>
                                             <span>{{ carDetail.dailyRent }}</span>
                                             <span class="price-unit">/天</span>
@@ -561,7 +561,7 @@ const fetchCarDetail = async () => {
     isLoading.value = true;
     try {
         const response = await carApi.getCarDetail(carId);
-        // console.log('车辆详情响应:', response);
+        // //'车辆详情响应:', response);
         
         if (response.code === 200 && response.data) {
             carDetail.value = response.data;
@@ -576,7 +576,7 @@ const fetchCarDetail = async () => {
                 imageList.value = ['https://via.placeholder.com/800x600/2c3e50/ffffff?text=Car'];
             }
             
-            // console.log('图片列表:', imageList.value);
+            // //'图片列表:', imageList.value);
         } else {
             message.error(response.msg || '获取车辆详情失败');
         }
@@ -646,7 +646,7 @@ const fetchComments = async () => {
             carId: parseInt(carId)
         });
         
-        // console.log('初始评论列表响应:', response);
+        // //'初始评论列表响应:', response);
         
         if (response.code === 200 && response.data) {
             const comments = Array.isArray(response.data) ? response.data : response.data.records || [];
@@ -672,9 +672,9 @@ const fetchComments = async () => {
                 allCommentsLoaded.value = false;
             }
             
-            // console.log('处理后的评论列表:', commentList.value);
-            // console.log('总评论数:', totalComments.value);
-            // console.log('是否已全部加载:', allCommentsLoaded.value);
+            // //'处理后的评论列表:', commentList.value);
+            // //'总评论数:', totalComments.value);
+            // //'是否已全部加载:', allCommentsLoaded.value);
         } else {
             message.error(response.msg || '获取评论列表失败');
         }
@@ -696,7 +696,7 @@ const handleLoadMoreComments = async () => {
         // 下一页页码
         const nextPage = commentPage.value + 1;
         
-        // console.log(`加载更多评论，请求第 ${nextPage} 页`);
+        // //`加载更多评论，请求第 ${nextPage} 页`);
         
         const response = await commentApi.loadMoreComments({
             carId: parseInt(carId),
@@ -704,12 +704,12 @@ const handleLoadMoreComments = async () => {
             pageSize: 10
         });
         
-        // console.log('加载更多评论响应:', response);
+        // //'加载更多评论响应:', response);
         
         if (response.code === 200 && response.data) {
             const newComments = Array.isArray(response.data) ? response.data : response.data.records || [];
             
-            // console.log(`本次加载评论数量: ${newComments.length}条`);
+            // //`本次加载评论数量: ${newComments.length}条`);
             
             // 处理新评论
             const processedComments = newComments.map(comment => processCommentReplies(comment));
@@ -717,11 +717,11 @@ const handleLoadMoreComments = async () => {
             // 规则：如果是第一次点击加载更多（commentPage === 0），用10条替换原有的5条
             if (commentPage.value === 0) {
                 commentList.value = processedComments;
-                // console.log('第一次加载更多，替换原有的5条评论');
+                // //'第一次加载更多，替换原有的5条评论');
             } else {
                 // 后续点击，追加到现有列表
                 commentList.value = [...commentList.value, ...processedComments];
-                // console.log('追加到现有评论列表');
+                // //'追加到现有评论列表');
             }
             
             // 更新页码
@@ -731,10 +731,10 @@ const handleLoadMoreComments = async () => {
             // 如果返回的数据 <= 9条，说明没有更多了
             if (newComments.length <= 9) {
                 allCommentsLoaded.value = true;
-                // console.log('所有评论已加载完成：返回数据 <= 9条');
+                // //'所有评论已加载完成：返回数据 <= 9条');
             } else {
                 allCommentsLoaded.value = false;
-                // console.log('还有更多评论可加载');
+                // //'还有更多评论可加载');
             }
             
             // 更新总评论数
@@ -742,10 +742,10 @@ const handleLoadMoreComments = async () => {
                 totalComments.value = response.data.total;
             }
             
-            // console.log('更新后的评论列表长度:', commentList.value.length);
-            // console.log('当前页码:', commentPage.value);
-            // console.log('总评论数:', totalComments.value);
-            // console.log('是否已加载完成:', allCommentsLoaded.value);
+            // //'更新后的评论列表长度:', commentList.value.length);
+            // //'当前页码:', commentPage.value);
+            // //'总评论数:', totalComments.value);
+            // //'是否已加载完成:', allCommentsLoaded.value);
         } else {
             message.error(response.msg || '加载更多评论失败');
         }
@@ -779,7 +779,7 @@ const handlePostComment = async () => {
             followCommentId: 0  // 非回复评论
         });
         
-        // console.log('发布评论响应:', response);
+        // //'发布评论响应:', response);
         
         if (response.code === 200) {
             message.success('评论发布成功，等待AI审核中...');
@@ -845,7 +845,7 @@ const handlePostReply = async (comment) => {
             followCommentId: comment.id       // 被回复的评论ID
         });
         
-        // console.log('发布回复响应:', response);
+        // //'发布回复响应:', response);
         
         if (response.code === 200) {
             message.success('回复发布成功，等待AI审核中...');
@@ -934,7 +934,7 @@ const handleLoadMoreReplies = async (comment) => {
         // 下一页页码
         const nextPage = comment.replyPage + 1;
         
-        // console.log(`加载评论 ${comment.id} 的回复，请求第 ${nextPage} 页`);
+        // //`加载评论 ${comment.id} 的回复，请求第 ${nextPage} 页`);
         
         const response = await commentApi.loadReply({
             id: comment.id,
@@ -942,12 +942,12 @@ const handleLoadMoreReplies = async (comment) => {
             pageSize: 5
         });
         
-        // console.log('加载回复响应:', response);
+        // //'加载回复响应:', response);
         
         if (response.code === 200 && response.data) {
             const newReplies = Array.isArray(response.data) ? response.data : response.data.records || [];
             
-            // console.log(`本次加载数量: ${newReplies.length}条`);
+            // //`本次加载数量: ${newReplies.length}条`);
             
             // 处理新回复的 followUsername
             const processedNewReplies = newReplies.map(reply => processReplyFollowUsername(reply, comment));
@@ -955,11 +955,11 @@ const handleLoadMoreReplies = async (comment) => {
             // 规则1：如果是第一次点击加载（replyPage === 0），替换现有的回复列表
             if (comment.replyPage === 0) {
                 comment.replyList = processedNewReplies;
-                // console.log('第一次分页加载，替换初始回复列表');
+                // //'第一次分页加载，替换初始回复列表');
             } else {
                 // 规则2：如果已经在分页中，追加到现有列表
                 comment.replyList = [...comment.replyList, ...processedNewReplies];
-                // console.log('追加到现有回复列表');
+                // //'追加到现有回复列表');
             }
             
             // 更新页码
@@ -969,15 +969,15 @@ const handleLoadMoreReplies = async (comment) => {
             // 如果返回的数据 <= 4条，说明没有更多了
             if (newReplies.length <= 4) {
                 comment.allRepliesLoaded = true;
-                // console.log('已加载完成：本次返回 <=4 条');
+                // //'已加载完成：本次返回 <=4 条');
             } else {
                 comment.allRepliesLoaded = false;
-                // console.log('还有更多回复可加载');
+                // //'还有更多回复可加载');
             }
             
-            // console.log('更新后的回复列表长度:', comment.replyList.length);
-            // console.log('当前页码:', comment.replyPage);
-            // console.log('是否已加载完成:', comment.allRepliesLoaded);
+            // //'更新后的回复列表长度:', comment.replyList.length);
+            // //'当前页码:', comment.replyPage);
+            // //'是否已加载完成:', comment.allRepliesLoaded);
         } else {
             message.error(response.msg || '加载回复失败');
         }
@@ -991,23 +991,23 @@ const handleLoadMoreReplies = async (comment) => {
 
 // 滚动监听处理函数
 const handleScroll = () => {
-    console.log('滚动事件触发');
+    //'滚动事件触发');
     
     // 如果正在加载，不触发
     if (isLoadingMoreComments.value) {
-        console.log('正在加载中，跳过');
+        //'正在加载中，跳过');
         return;
     }
     
     // 如果已加载完成，不触发
     if (allCommentsLoaded.value) {
-        console.log('已加载完成，跳过');
+        //'已加载完成，跳过');
         return;
     }
     
     // 如果没有评论，不触发
     if (commentList.value.length === 0) {
-        console.log('没有评论，跳过');
+        //'没有评论，跳过');
         return;
     }
     
@@ -1018,18 +1018,9 @@ const handleScroll = () => {
     
     const distanceToBottom = documentHeight - scrollTop - windowHeight;
     
-    console.log('滚动检测(方式1-页面):', { 
-        scrollTop,
-        windowHeight, 
-        documentHeight,
-        distanceToBottom,
-        commentListLength: commentList.value.length,
-        totalComments: totalComments.value
-    });
-    
     // 距离底部小于500px时触发
     if (distanceToBottom < 500) {
-        console.log('触发加载更多评论');
+        //'触发加载更多评论');
         handleLoadMoreComments();
         return;
     }
@@ -1042,14 +1033,8 @@ const handleScroll = () => {
         
         const distanceToViewportBottom = elementBottom - windowHeight;
         
-        console.log('滚动检测(方式2-评论区):', { 
-            elementBottom, 
-            windowHeight, 
-            distanceToViewportBottom
-        });
-        
         if (distanceToViewportBottom < 300) {
-            console.log('触发加载更多评论(方式2)');
+            //'触发加载更多评论(方式2)');
             handleLoadMoreComments();
         }
     }
@@ -1138,8 +1123,8 @@ onMounted(async () => {
     // 等待 DOM 更新后添加滚动监听（监听整个页面滚动）
     await nextTick();
     window.addEventListener('scroll', handleScrollDebounced);
-    console.log('页面滚动监听已添加');
-    console.log('commentSectionRef:', commentSectionRef.value);
+    //'页面滚动监听已添加');
+    //'commentSectionRef:', commentSectionRef.value);
 });
 
 // 组件卸载时移除滚动监听

@@ -266,10 +266,8 @@ const errorMessage = ref('');
 // 注册处理
 const register = async (e) => {
     e.preventDefault();
-    // console.log('开始注册', formData, formRef.value);
     try {
         await formRef.value?.validate();  // 这是核心改动
-        console.log('表单验证通过');
 
         if (formData.captcha.toLowerCase() !== randomCaptcha.value.toLowerCase()) {
             message.error('验证码输入错误');
@@ -290,7 +288,6 @@ const register = async (e) => {
             captcha: formData.captcha
         });
 
-        // console.log(response);
         if (response.code !== 200) {
             message.error(response.message);
             refreshCaptcha();
@@ -313,7 +310,6 @@ const register = async (e) => {
         } else {
             errorMessage.value = '请填写所有必填字段并确保输入正确';
         }
-        console.error('注册失败:', error);
         refreshCaptcha();
     }
 };

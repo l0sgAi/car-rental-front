@@ -326,8 +326,6 @@ const fetchUserInfo = async () => {
         if (response.code === 200 && response.data) {
             const userData = response.data;
             
-            console.log('后端返回的用户数据:', userData); // 调试日志
-            
             // 更新表单数据
             formData.username = userData.username || '';
             formData.phone = userData.phone || '';
@@ -340,8 +338,6 @@ const fetchUserInfo = async () => {
             formData.birthdate = formatDate(userData.birthdate);
             formData.avatarUrl = userData.avatarUrl || '';
             
-            console.log('转换后的表单数据:', formData); // 调试日志
-            
             // 保存原始数据
             originalData.value = JSON.parse(JSON.stringify(formData));
             
@@ -350,7 +346,6 @@ const fetchUserInfo = async () => {
             message.error(response.message || '获取用户信息失败');
         }
     } catch (error) {
-        console.error('获取用户信息失败:', error);
         message.error('获取用户信息失败，请稍后重试');
     }
 };
@@ -403,7 +398,6 @@ const updateProfile = async () => {
         } else {
             errorMessage.value = '请填写所有必填字段并确保输入正确';
         }
-        console.error('更新失败:', error);
         message.error('更新失败，请检查输入');
     } finally {
         isSubmitting.value = false;
@@ -442,7 +436,6 @@ const handleAvatarUpload = async ({ file, onFinish, onError }) => {
             onError();
         }
     } catch (error) {
-        console.error('头像上传失败:', error);
         message.error('头像上传失败，请稍后重试');
         onError();
     } finally {
