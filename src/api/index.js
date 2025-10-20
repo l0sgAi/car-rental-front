@@ -201,6 +201,9 @@ export const commentApi = {
   
   // 用户加载评论回复
   loadReply: (params) => get(`/rental/comment/user/loadReply`, params),
+  
+  // 用户点赞评论
+  likeComment: (commentId) => post(`/rental/comment/user/like?commentId=${commentId}`),
 };
 
 // 导出所有API

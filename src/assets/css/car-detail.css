@@ -431,6 +431,16 @@
   background: rgba(24, 160, 88, 0.1);
 }
 
+.comment-action-btn.liked {
+  color: #f56c6c;
+  background: rgba(245, 108, 108, 0.1);
+}
+
+.comment-action-btn.liked:hover {
+  color: #f78989;
+  background: rgba(245, 108, 108, 0.15);
+}
+
 /* 回复区域 */
 .reply-section {
   margin-top: 16px;

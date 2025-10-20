@@ -315,9 +315,14 @@
                                                     <n-icon :component="ChatbubbleOutline" size="16" />
                                                     回复
                                                 </button>
-                                                <button class="comment-action-btn" v-if="comment.likeCount > 0">
-                                                    <n-icon :component="HeartOutline" size="16" />
-                                                    {{ comment.likeCount }}
+                                                <button 
+                                                    class="comment-action-btn"
+                                                    :class="{ 'liked': comment.isLiked }"
+                                                    @click="handleLike(comment)"
+                                                >
+                                                    <n-icon :component="comment.isLiked ? Heart : HeartOutline" size="16" />
+                                                    <span v-if="comment.likeCount > 0">{{ comment.likeCount }}</span>
+                                                    <span v-else>赞</span>
                                                 </button>
                                             </div>
 
@@ -354,6 +359,15 @@
                                                                 >
                                                                     <n-icon :component="ChatbubbleOutline" size="16" />
                                                                     回复
+                                                                </button>
+                                                                <button 
+                                                                    class="comment-action-btn"
+                                                                    :class="{ 'liked': reply.isLiked }"
+                                                                    @click="handleLike(reply)"
+                                                                >
+                                                                    <n-icon :component="reply.isLiked ? Heart : HeartOutline" size="16" />
+                                                                    <span v-if="reply.likeCount > 0">{{ reply.likeCount }}</span>
+                                                                    <span v-else>赞</span>
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -490,6 +504,7 @@ import {
     ChevronDownOutline,
     CartOutline,
     HeartOutline,
+    Heart,
     FlameOutline,
     CheckmarkCircleOutline
 } from '@vicons/ionicons5';
@@ -595,7 +610,7 @@ const processCommentReplies = (comment) => {
     const allReplies = children || [];
     const replyCount = allReplies.length;
     
-    // 为每个回复添加被回复人的用户名
+    // 为每个回复添加被回复人的用户名和点赞状态
     const processedReplies = allReplies.map(reply => {
         let followUsername = null;
         
@@ -617,7 +632,9 @@ const processCommentReplies = (comment) => {
         
         return {
             ...reply,
-            followUsername: followUsername
+            followUsername: followUsername,
+            isLiked: reply.liked === 1, // 根据后端返回的liked字段判断是否点赞过
+            likeCount: reply.likeCount || 0  // 确保有点赞数
         };
     });
     
@@ -626,6 +643,8 @@ const processCommentReplies = (comment) => {
     
     return {
         ...commentWithoutChildren,
+        isLiked: commentWithoutChildren.liked === 1, // 根据后端返回的liked字段判断是否点赞过
+        likeCount: commentWithoutChildren.likeCount || 0,  // 确保有点赞数
         replyList: initialReplies, // 初始显示的回复（2条或全部）
         allReplies: processedReplies, // 保存所有初始回复数据（用于查找followUsername）
         replyCount: replyCount, // 总回复数
@@ -923,7 +942,9 @@ const processReplyFollowUsername = (reply, comment) => {
     
     return {
         ...reply,
-        followUsername: followUsername
+        followUsername: followUsername,
+        isLiked: reply.liked === 1, // 根据后端返回的liked字段判断是否点赞过
+        likeCount: reply.likeCount || 0  // 确保有点赞数
     };
 };
 
@@ -1113,6 +1134,39 @@ const handleRent = () => {
     message.info('订单结算功能开发中...');
     // TODO: 跳转到订单结算页面
     // router.push(`/order/checkout?carId=${route.params.id}`);
+};
+
+// 点赞处理
+const handleLike = async (comment) => {
+    // 检查是否登录
+    const token = localStorage.getItem('tokenValue');
+    if (!token) {
+        message.warning('请先登录');
+        return;
+    }
+
+    try {
+        const response = await commentApi.likeComment(comment.id);
+        
+        if (response.code === 200) {
+            // 切换点赞状态
+            comment.isLiked = !comment.isLiked;
+            
+            // 更新点赞数量
+            if (comment.isLiked) {
+                comment.likeCount = (comment.likeCount || 0) + 1;
+                // message.success('点赞成功');
+            } else {
+                comment.likeCount = Math.max((comment.likeCount || 0) - 1, 0);
+                // message.success('取消点赞');
+            }
+        } else {
+            message.error(response.msg || '操作失败');
+        }
+    } catch (error) {
+        console.error('点赞失败:', error);
+        message.error('操作失败，请重试');
+    }
 };
 
 // 组件挂载时获取数据
