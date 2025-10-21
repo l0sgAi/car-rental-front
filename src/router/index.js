@@ -28,9 +28,27 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/my-orders",
+    name: "MyOrders",
+    component: () => import("../views/MyOrders.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/car/:id",
     name: "CarDetail",
     component: () => import("../views/CarDetail.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/order/start",
+    name: "OrderStart",
+    component: () => import("../views/OrderStart.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/order/detail",
+    name: "OrderDetail",
+    component: () => import("../views/OrderDetail.vue"),
     meta: { requiresAuth: true },
   },
   {
@@ -71,6 +89,22 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  // 控制滚动行为：每次路由切换时滚动到顶部
+  scrollBehavior(to, from, savedPosition) {
+    // 如果有保存的位置（比如浏览器前进/后退），使用保存的位置
+    if (savedPosition) {
+      return savedPosition;
+    }
+    // 如果有锚点，滚动到锚点
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth',
+      };
+    }
+    // 默认滚动到顶部
+    return { top: 0, behavior: 'smooth' };
+  },
 });
 
 // 简单的路由守卫，检查是否已登录

@@ -1,0 +1,362 @@
+/* 订单确认页面样式 - OrderStart (os-前缀) */
+.os-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+/* 顶部导航栏 */
+.os-header {
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
+.os-header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.os-back-button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+}
+
+.os-header-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* 主体内容 */
+.os-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px 120px;
+}
+
+.os-main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* 卡片通用样式 */
+.os-container .n-card {
+    background: rgba(26, 26, 46, 0.6) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 16px !important;
+    overflow: hidden;
+}
+
+/* 标题样式 */
+.os-section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 24px;
+}
+
+/* 车辆信息卡片 */
+.os-car-info-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.os-car-image {
+    flex-shrink: 0;
+}
+
+.os-car-image .n-image {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.os-car-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.os-car-name {
+    font-size: 24px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+}
+
+.os-car-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.os-car-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.os-price-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.os-price-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #f0a020;
+}
+
+.os-price-unit {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.os-car-min-days {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 8px 12px;
+    background: rgba(24, 160, 88, 0.1);
+    border-radius: 8px;
+    width: fit-content;
+}
+
+/* 时间选择卡片 */
+.os-time-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.os-time-input-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.os-time-input-item {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.os-time-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* 已预订时间段提示 */
+.os-unavailable-time-tips {
+    padding: 16px;
+    background: rgba(208, 48, 80, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(208, 48, 80, 0.2);
+}
+
+.os-tips-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #d03050;
+    margin-bottom: 12px;
+}
+
+.os-time-ranges {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.os-time-range-item {
+    display: flex;
+    align-items: center;
+}
+
+/* 租赁汇总 */
+.os-rental-summary {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.os-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+}
+
+.os-summary-label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.os-summary-value {
+    color: #fff;
+    font-weight: 500;
+}
+
+.os-summary-item.total {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 18px;
+}
+
+.os-summary-value-total {
+    color: #f0a020;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.os-summary-tip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(240, 160, 32, 0.1);
+    border-radius: 8px;
+    font-size: 14px;
+    color: #f0a020;
+    margin-top: 4px;
+}
+
+/* 底部操作栏 */
+.os-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px 24px;
+    box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.3);
+    z-index: 999;
+}
+
+.os-footer-content {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.os-price-summary {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.os-total-label {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.os-total-price {
+    font-size: 32px;
+    font-weight: 700;
+    color: #f0a020;
+}
+
+.os-submit-button {
+    padding: 0 48px !important;
+    height: 48px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+}
+
+/* 加载和错误状态 */
+.os-loading-section,
+.os-error-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 80px 24px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.os-error-text {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .os-content {
+        padding: 20px 16px 120px;
+    }
+
+    .os-car-info-layout {
+        flex-direction: column;
+    }
+
+    .os-car-image .n-image {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .os-time-input-group {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .os-footer-content {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .os-price-summary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .os-submit-button {
+        width: 100%;
+    }
+
+    .os-car-name {
+        font-size: 20px;
+    }
+
+    .os-price-value {
+        font-size: 24px;
+    }
+
+    .os-summary-value-total {
+        font-size: 24px;
+    }
+
+    .os-total-price {
+        font-size: 28px;
+    }
+}

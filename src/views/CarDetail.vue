@@ -215,7 +215,7 @@
                                     <h2 class="section-title" style="margin: 0;">
                                         <n-icon :component="ChatbubblesOutline" size="28" color="#18a058" />
                                         用户评价
-                                        <span class="comment-count">({{ totalComments }}条评论)</span>
+                                        <!-- <span class="comment-count">({{ totalComments }}条评论)</span> -->
                                     </h2>
                                 </div>
                             </div>
@@ -553,6 +553,7 @@ const isPostingComment = ref(false);
 
 // 滚动监听相关
 const commentSectionRef = ref(null); // 评论区域的引用
+const hasLoadedInitialComments = ref(false); // 是否已加载过初始评论
 
 // 回复相关
 const replyingCommentId = ref(null); // 顶级评论的ID（用于定位输入框位置）
@@ -659,6 +660,9 @@ const fetchComments = async () => {
     const carId = route.params.id;
     if (!carId) return;
 
+    // 如果已经加载过，不重复加载
+    if (hasLoadedInitialComments.value) return;
+
     isLoadingComments.value = true;
     try {
         const response = await commentApi.getCarComments({
@@ -690,6 +694,9 @@ const fetchComments = async () => {
             } else {
                 allCommentsLoaded.value = false;
             }
+            
+            // 标记已加载过初始评论
+            hasLoadedInitialComments.value = true;
             
             // //'处理后的评论列表:', commentList.value);
             // //'总评论数:', totalComments.value);
@@ -809,7 +816,8 @@ const handlePostComment = async () => {
                 score: 5
             };
             
-            // 重新加载初始评论列表
+            // 重新加载评论列表（重置标志位以便重新加载）
+            hasLoadedInitialComments.value = false;
             await fetchComments();
         } else {
             message.error(response.msg || '发布评论失败');
@@ -1131,9 +1139,13 @@ const formatDate = (dateStr) => {
 
 // 马上租
 const handleRent = () => {
-    message.info('订单结算功能开发中...');
-    // TODO: 跳转到订单结算页面
-    // router.push(`/order/checkout?carId=${route.params.id}`);
+    // 跳转到下单页面
+    router.push({
+        path: '/order/start',
+        query: {
+            carId: route.params.id
+        }
+    });
 };
 
 // 点赞处理
@@ -1169,23 +1181,56 @@ const handleLike = async (comment) => {
     }
 };
 
+// Intersection Observer 实例
+let commentSectionObserver = null;
+
 // 组件挂载时获取数据
 onMounted(async () => {
     await fetchCarDetail();
-    await fetchComments();
     
-    // 等待 DOM 更新后添加滚动监听（监听整个页面滚动）
+    // 等待 DOM 更新后设置 Intersection Observer
     await nextTick();
+    
+    // 添加滚动监听（监听整个页面滚动，用于加载更多评论）
     window.addEventListener('scroll', handleScrollDebounced);
-    //'页面滚动监听已添加');
-    //'commentSectionRef:', commentSectionRef.value);
+    
+    // 设置 Intersection Observer 监听评论区域
+    if (commentSectionRef.value) {
+        const element = commentSectionRef.value.$el || commentSectionRef.value;
+        
+        commentSectionObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    // 当评论区进入视口时，加载评论
+                    if (entry.isIntersecting && !hasLoadedInitialComments.value) {
+                        //'评论区进入视口，开始加载评论');
+                        fetchComments();
+                    }
+                });
+            },
+            {
+                // 提前100px开始加载，提升用户体验
+                rootMargin: '0px 0px 100px 0px',
+                threshold: 0
+            }
+        );
+        
+        commentSectionObserver.observe(element);
+        //'评论区 Intersection Observer 已设置');
+    }
 });
 
-// 组件卸载时移除滚动监听
+// 组件卸载时移除监听
 onUnmounted(() => {
     window.removeEventListener('scroll', handleScrollDebounced);
     if (scrollTimer) {
         clearTimeout(scrollTimer);
+    }
+    
+    // 移除 Intersection Observer
+    if (commentSectionObserver) {
+        commentSectionObserver.disconnect();
+        commentSectionObserver = null;
     }
 });
 </script>

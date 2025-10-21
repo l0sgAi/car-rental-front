@@ -293,7 +293,8 @@ import {
     PersonOutline,
     LogOutOutline,
     SettingsOutline,
-    PersonCircleOutline
+    PersonCircleOutline,
+    ReceiptOutline
 } from '@vicons/ionicons5';
 
 // 引入独立的CSS文件
@@ -316,6 +317,11 @@ const userMenuOptions = [
         label: '个人中心',
         key: 'profile',
         icon: () => h(NIcon, { component: PersonOutline })
+    },
+    {
+        label: '我的订单',
+        key: 'my-orders',
+        icon: () => h(NIcon, { component: ReceiptOutline })
     },
     {
         label: '设置',
@@ -342,6 +348,8 @@ const handleUserMenuSelect = (key) => {
         message.info('设置功能开发中');
     } else if (key === 'profile') {
         router.push('/profile');
+    } else if (key === 'my-orders') {
+        router.push('/my-orders');
     }
 };
 

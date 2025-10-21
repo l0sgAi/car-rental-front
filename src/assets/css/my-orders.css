@@ -1,0 +1,242 @@
+/* 我的订单页面样式 - MyOrders (mo-前缀) */
+.mo-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+}
+
+.mo-header {
+    background: rgba(24, 24, 28, 0.9);
+    backdrop-filter: blur(10px);
+    padding: 0 24px;
+    height: 64px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.mo-header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mo-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mo-back-button {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.mo-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin-left: 8px;
+}
+
+.mo-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mo-username {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 14px;
+}
+
+.mo-main-content {
+    background-color: transparent;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 88px 24px 24px;  /* 64px(header height) + 24px(spacing) = 88px */
+}
+
+.mo-content-card {
+    background: rgba(24, 24, 28, 0.6);
+    backdrop-filter: blur(10px);
+}
+
+/* 统计卡片样式 */
+.mo-stat-card {
+    cursor: default;
+    transition: all 0.3s ease;
+}
+
+.mo-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.mo-stat-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.mo-stat-content .n-icon {
+    opacity: 0.8;
+}
+
+.mo-stat-info {
+    flex: 1;
+}
+
+.mo-stat-label {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 4px;
+}
+
+.mo-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.mo-stat-total {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.mo-stat-pending {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.mo-stat-paid {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.mo-stat-renting {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.mo-stat-completed {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+/* 订单卡片样式 */
+.mo-order-card {
+    background: rgba(30, 30, 35, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.mo-order-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.mo-order-content {
+    display: flex;
+    gap: 20px;
+}
+
+.mo-order-image {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.mo-order-status-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+}
+
+.mo-order-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mo-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.mo-car-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
+
+.mo-order-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.mo-price-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.mo-price-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #f5576c;
+}
+
+.mo-order-details {
+    flex: 1;
+}
+
+.mo-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+.mo-detail-item .n-icon {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.mo-detail-label {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.mo-detail-value {
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+.mo-order-actions {
+    flex-shrink: 0;
+    width: 140px;
+    display: flex;
+    align-items: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .mo-order-content {
+        flex-direction: column;
+    }
+    
+    .mo-order-image {
+        width: 100%;
+    }
+    
+    .mo-order-image img {
+        width: 100%;
+        height: auto;
+    }
+    
+    .mo-order-actions {
+        width: 100%;
+    }
+}
+

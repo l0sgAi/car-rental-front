@@ -206,6 +206,26 @@ export const commentApi = {
   likeComment: (commentId) => post(`/rental/comment/user/like?commentId=${commentId}`),
 };
 
+/**
+ * 订单管理相关API
+ */
+export const orderApi = {
+  // 准备下单（获取下单信息）
+  startOrder: (carId) => get(`/rental/order/start`, { carId }),
+  
+  // 生成订单
+  createOrder: (data) => post(`/rental/order/create`, data),
+  
+  // 获取订单详情
+  getOrderDetail: (orderId) => get(`/rental/order/detail/${orderId}`),
+  
+  // 管理员获取所有订单列表（支持分页、搜索、筛选）
+  getOrderList: (params) => get(`/rental/order/admin/list`, params),
+  
+  // 用户获取自己的订单列表（支持分页、搜索、筛选）
+  getUserOrderList: (params) => get(`/rental/order/user/list`, params),
+};
+
 // 导出所有API
 export default {
   userApi,
@@ -217,4 +237,5 @@ export default {
   carApi,
   brandApi,
   commentApi,
+  orderApi,
 };

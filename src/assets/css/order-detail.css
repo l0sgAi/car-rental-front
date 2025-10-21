@@ -1,0 +1,366 @@
+/* 订单详情页面样式 - OrderDetail (od-前缀) */
+.od-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+/* 顶部导航栏 */
+.od-header {
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
+.od-header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.od-back-button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+}
+
+.od-header-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* 主体内容 */
+.od-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px 100px;
+}
+
+.od-main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* 卡片通用样式 */
+.od-container .n-card {
+    background: rgba(26, 26, 46, 0.6) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 16px !important;
+    overflow: hidden;
+}
+
+/* 标题样式 */
+.od-section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 24px;
+}
+
+/* 订单状态卡片 */
+.od-status-card {
+    background: linear-gradient(135deg, rgba(24, 160, 88, 0.15) 0%, rgba(16, 33, 62, 0.6) 100%) !important;
+}
+
+.od-status-content {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 20px 0;
+}
+
+.od-status-icon {
+    flex-shrink: 0;
+}
+
+.od-status-info {
+    flex: 1;
+}
+
+.od-status-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 8px 0;
+}
+
+.od-status-desc {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+}
+
+/* 车辆信息卡片 */
+.od-car-info-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.od-car-image {
+    flex-shrink: 0;
+}
+
+.od-car-image .n-image {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.od-car-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.od-car-name {
+    font-size: 24px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0;
+}
+
+.od-detail-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 15px;
+}
+
+.od-detail-label {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.od-detail-value {
+    color: #fff;
+    font-weight: 500;
+}
+
+.od-detail-value.price {
+    color: #f0a020;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+/* 租赁信息 */
+.od-rental-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.od-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.od-info-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.od-info-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+}
+
+/* 价格信息 */
+.od-price-info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.od-price-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+}
+
+.od-price-label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.od-price-value {
+    color: #fff;
+    font-weight: 500;
+}
+
+.od-price-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 8px 0;
+}
+
+.od-price-item.total {
+    font-size: 18px;
+    padding-top: 8px;
+}
+
+.od-price-value-total {
+    color: #f0a020;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+/* 订单信息 */
+.od-order-info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.od-order-item {
+    display: flex;
+    gap: 8px;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.od-order-label {
+    color: rgba(255, 255, 255, 0.6);
+    flex-shrink: 0;
+}
+
+.od-order-value {
+    color: #fff;
+    font-weight: 500;
+    word-break: break-all;
+}
+
+/* 操作按钮区域 */
+.od-action-area {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.od-action-button {
+    height: 56px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+}
+
+.od-action-button.primary-action {
+    grid-column: span 3;
+}
+
+/* 加载和错误状态 */
+.od-loading-section,
+.od-error-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 80px 24px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.od-error-text {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .od-content {
+        padding: 20px 16px 100px;
+    }
+
+    .od-status-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+    }
+
+    .od-status-title {
+        font-size: 28px;
+    }
+
+    .od-status-desc {
+        font-size: 14px;
+    }
+
+    .od-car-info-layout {
+        flex-direction: column;
+    }
+
+    .od-car-image .n-image {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .od-car-name {
+        font-size: 20px;
+    }
+
+    .od-detail-value.price {
+        font-size: 18px;
+    }
+
+    .od-price-value-total {
+        font-size: 28px;
+    }
+
+    .od-action-area {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .od-action-button.primary-action {
+        grid-column: span 1;
+        order: -1; /* 移到最上面 */
+    }
+
+    .od-info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .od-info-value {
+        font-size: 14px;
+    }
+}
+
+/* 状态特殊颜色 */
+.od-status-card.pending {
+    background: linear-gradient(135deg, rgba(240, 160, 32, 0.15) 0%, rgba(16, 33, 62, 0.6) 100%) !important;
+}
+
+.od-status-card.paid {
+    background: linear-gradient(135deg, rgba(24, 160, 88, 0.15) 0%, rgba(16, 33, 62, 0.6) 100%) !important;
+}
+
+.od-status-card.cancelled {
+    background: linear-gradient(135deg, rgba(208, 48, 80, 0.15) 0%, rgba(16, 33, 62, 0.6) 100%) !important;
+}
+
+.od-status-card.completed {
+    background: linear-gradient(135deg, rgba(24, 160, 88, 0.15) 0%, rgba(16, 33, 62, 0.6) 100%) !important;
+}
