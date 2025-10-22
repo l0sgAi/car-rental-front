@@ -134,6 +134,7 @@
                                     placeholder="请输入最小租赁天数" 
                                     style="width: 100%" 
                                     :min="1"
+                                    :max="60"
                                 />
                             </n-form-item>
                         </n-gi>

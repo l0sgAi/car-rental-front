@@ -300,6 +300,9 @@
                             </n-tag>
                             <span v-else>未评分</span>
                         </n-descriptions-item>
+                        <n-descriptions-item label="取还车地址" :span="2" v-if="currentOrder.address">
+                            {{ currentOrder.address }}
+                        </n-descriptions-item>
                         <n-descriptions-item label="订单金额" :span="2">
                             <n-text type="error" strong style="font-size: 18px">¥{{ currentOrder.price || 0 }}</n-text>
                         </n-descriptions-item>

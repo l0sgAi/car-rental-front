@@ -1,4 +1,4 @@
-import { get, post, put, del } from '../utils/request';
+import { get, post, put, del, download } from '../utils/request';
 
 /**
  * 用户相关API
@@ -224,6 +224,16 @@ export const orderApi = {
   
   // 用户获取自己的订单列表（支持分页、搜索、筛选）
   getUserOrderList: (params) => get(`/rental/order/user/list`, params),
+  
+  // 管理员导出订单台账（返回Excel文件）
+  exportOrders: () => {
+    // 生成默认文件名
+    const timestamp = new Date().toISOString().replace(/[:\-T]/g, '').slice(0, 14);
+    const defaultFilename = `订单台账_${timestamp}.xlsx`;
+    
+    // 使用 download 函数下载文件
+    return download('/rental/order/admin/export', {}, defaultFilename);
+  },
 };
 
 // 导出所有API

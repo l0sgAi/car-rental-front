@@ -34,6 +34,11 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   (response) => {
+    // 如果是文件下载（blob类型），直接返回完整的response对象
+    if (response.config.responseType === 'blob') {
+      return response;
+    }
+    
     const res = response.data;
     // 如果响应成功，直接返回数据
     return res;
@@ -125,21 +130,38 @@ export function upload(url, file, config = {}) {
 }
 
 // 封装下载文件的GET请求
-export function download(url, params, filename, config = {}) {
+export function download(url, params = {}, filename, config = {}) {
   return service.get(url, {
     params,
     responseType: 'blob',
     ...config,
   }).then(response => {
-    // 创建Blob对象
-    const blob = new Blob([response]);
+    // 从响应头中提取文件名（如果后端提供了的话）
+    let downloadFilename = filename;
+    const contentDisposition = response.headers?.['content-disposition'];
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename\*?=(['"]?)(?:UTF-\d['"]*)?([^;\r\n"']*)(['"]?)/i);
+      if (filenameMatch && filenameMatch[2]) {
+        downloadFilename = decodeURIComponent(filenameMatch[2]);
+      }
+    }
+    
+    // response.data 是 Blob 对象
+    const blob = response.data;
+    
     // 创建下载链接
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = filename;
+    link.download = downloadFilename || 'download';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+    
     // 释放URL对象
-    URL.revokeObjectURL(link.href);
+    setTimeout(() => {
+      URL.revokeObjectURL(link.href);
+    }, 100);
+    
     return response;
   });
 }

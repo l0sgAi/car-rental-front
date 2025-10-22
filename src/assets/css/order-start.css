@@ -310,6 +310,28 @@
     color: rgba(255, 255, 255, 0.6);
 }
 
+/* 地址输入区域 */
+.os-address-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.os-address-input {
+    width: 100%;
+}
+
+.os-address-tip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(24, 160, 88, 0.1);
+    border-radius: 8px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     .os-content {

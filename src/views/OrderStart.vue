@@ -140,6 +140,35 @@
                             </div>
                         </n-card>
 
+                        <!-- 取还车地址 -->
+                        <n-card :bordered="false">
+                            <h2 class="os-section-title">
+                                <n-icon :component="LocationOutline" size="28" color="#18a058" />
+                                取还车地址
+                            </h2>
+                            
+                            <div class="os-address-section">
+                                <div class="os-address-input">
+                                    <n-input
+                                        v-model:value="address"
+                                        type="textarea"
+                                        placeholder="请输入取还车地址（必填）"
+                                        :autosize="{
+                                            minRows: 3,
+                                            maxRows: 5
+                                        }"
+                                        :maxlength="255"
+                                        show-count
+                                        clearable
+                                    />
+                                </div>
+                                <div class="os-address-tip">
+                                    <n-icon :component="InformationCircleOutline" size="16" />
+                                    <span>请填写详细的取还车地址，便于我们为您提供服务</span>
+                                </div>
+                            </div>
+                        </n-card>
+
                         <!-- 底部操作栏 -->
                         <div class="os-footer">
                             <div class="os-footer-content">
@@ -199,7 +228,8 @@ import {
     NImage,
     NSpin,
     NConfigProvider,
-    NDatePicker
+    NDatePicker,
+    NInput
 } from 'naive-ui';
 import {
     ArrowBackOutline,
@@ -209,7 +239,8 @@ import {
     CheckmarkCircleOutline,
     TimeOutline,
     WarningOutline,
-    AlertCircleOutline
+    AlertCircleOutline,
+    LocationOutline
 } from '@vicons/ionicons5';
 
 // 引入样式
@@ -230,6 +261,9 @@ const isSubmitting = ref(false);
 // 时间选择
 const startTime = ref(null);
 const endTime = ref(null);
+
+// 取还车地址
+const address = ref('');
 
 // 车辆图片
 const carImage = computed(() => {
@@ -286,6 +320,16 @@ const totalPrice = computed(() => {
 // 是否可以提交
 const canSubmit = computed(() => {
     if (!startTime.value || !endTime.value || !orderData.value) {
+        return false;
+    }
+    
+    // 检查地址是否填写
+    if (!address.value || address.value.trim().length === 0) {
+        return false;
+    }
+    
+    // 检查地址长度
+    if (address.value.trim().length > 255) {
         return false;
     }
     
@@ -506,7 +550,7 @@ const fetchOrderData = async () => {
 // 提交订单
 const handleSubmitOrder = async () => {
     if (!canSubmit.value) {
-        message.warning('请正确选择租赁时间');
+        message.warning('请完整填写租赁信息');
         return;
     }
 
@@ -516,7 +560,8 @@ const handleSubmitOrder = async () => {
         const bookingData = {
             carId: parseInt(orderData.value.car.id), // 确保是 Long 类型
             startRentalTime: new Date(startTime.value).toISOString(), // 改为 startRentalTime
-            endRentalTime: new Date(endTime.value).toISOString() // 改为 endRentalTime
+            endRentalTime: new Date(endTime.value).toISOString(), // 改为 endRentalTime
+            address: address.value.trim() // 添加地址参数
         };
 
         const response = await orderApi.createOrder(bookingData);
@@ -535,7 +580,8 @@ const handleSubmitOrder = async () => {
                     // 传递基本信息作为备用
                     carId: orderData.value.car.id,
                     startTime: startTime.value,
-                    endTime: endTime.value
+                    endTime: endTime.value,
+                    address: address.value.trim()
                 }
             });
         } else {

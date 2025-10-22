@@ -35,6 +35,12 @@
                         @update:value="handleFilterChange"
                     />
                 </n-space>
+                <n-button type="success" @click="handleExport" :loading="exporting">
+                    <template #icon>
+                        <n-icon :component="DownloadOutline" />
+                    </template>
+                    导出台账
+                </n-button>
             </n-space>
 
             <!-- 统计卡片 -->
@@ -124,6 +130,9 @@
                         </n-tag>
                         <span v-else>未评分</span>
                     </n-descriptions-item>
+                    <n-descriptions-item label="取还车地址" :span="2" v-if="currentOrder.address">
+                        {{ currentOrder.address }}
+                    </n-descriptions-item>
                     <n-descriptions-item label="订单金额" :span="2">
                         <n-text type="error" strong style="font-size: 18px">¥{{ currentOrder.price || 0 }}</n-text>
                     </n-descriptions-item>
@@ -174,7 +183,8 @@ import {
     ReceiptOutline,
     TimeOutline,
     CheckmarkCircleOutline,
-    CheckmarkDoneCircleOutline
+    CheckmarkDoneCircleOutline,
+    DownloadOutline
 } from '@vicons/ionicons5';
 import { orderApi } from '@/api';
 
@@ -190,6 +200,9 @@ const orderList = ref([]);
 
 // 加载状态
 const loading = ref(false);
+
+// 导出状态
+const exporting = ref(false);
 
 // 搜索参数
 const searchParams = reactive({
@@ -495,6 +508,29 @@ const handleViewDetail = (row) => {
 const handleCancel = (id) => {
     // TODO: 实现取消订单的API调用
     message.warning('取消订单功能待后端接口支持');
+};
+
+// 导出订单台账
+const handleExport = async () => {
+    try {
+        exporting.value = true;
+        message.loading('正在生成Excel文件，请稍候...', { duration: 0, key: 'exporting' });
+        
+        // 调用导出API
+        await orderApi.exportOrders();
+        
+        // 延迟一下显示成功消息，确保下载已开始
+        setTimeout(() => {
+            message.destroyAll();
+            message.success('台账导出成功！');
+        }, 500);
+    } catch (error) {
+        console.error('导出台账失败:', error);
+        message.destroyAll();
+        message.error('导出台账失败，请检查网络连接或联系管理员');
+    } finally {
+        exporting.value = false;
+    }
 };
 
 // 组件挂载时获取订单列表

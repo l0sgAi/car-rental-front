@@ -90,6 +90,13 @@
                                     </div>
                                     <div class="od-info-value">{{ rentalDays }} 天</div>
                                 </div>
+                                <div class="od-info-item address" v-if="orderDetail.address">
+                                    <div class="od-info-label">
+                                        <n-icon :component="LocationOutline" size="20" />
+                                        取还车地址
+                                    </div>
+                                    <div class="od-info-value">{{ orderDetail.address }}</div>
+                                </div>
                             </div>
                         </n-card>
 
@@ -228,7 +235,8 @@ import {
     CheckmarkCircleOutline,
     ClockOutline,
     AlertCircleOutline,
-    HourglassOutline
+    HourglassOutline,
+    LocationOutline
 } from '@vicons/ionicons5';
 
 // 引入样式
@@ -390,7 +398,7 @@ const fetchOrderDetail = async () => {
     // 如果没有订单ID，使用传递的基本信息构造临时订单对象
     if (!orderId || orderId === 'latest') {
         // 使用URL参数构造临时订单对象
-        const { carId, startTime, endTime } = route.query;
+        const { carId, startTime, endTime, address } = route.query;
         if (carId && startTime && endTime) {
             orderDetail.value = {
                 id: 'temp',
@@ -400,6 +408,7 @@ const fetchOrderDetail = async () => {
                 dailyRent: 0,
                 startTime: startTime,
                 endTime: endTime,
+                address: address || '', // 添加地址字段
                 status: 0,
                 createTime: new Date().toISOString()
             };
