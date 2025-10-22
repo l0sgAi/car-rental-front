@@ -100,7 +100,7 @@
                                 </div>
 
                                 <!-- 已预订时间段提示 -->
-                                <div class="os-unavailable-time-tips" v-if="unavailableTimeRanges.length > 0">
+                                <!-- <div class="os-unavailable-time-tips" v-if="unavailableTimeRanges.length > 0">
                                     <div class="os-tips-header">
                                         <n-icon :component="TimeOutline" size="18" />
                                         <span>已预订时间段（不可选）</span>
@@ -116,7 +116,7 @@
                                             </n-tag>
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
 
                                 <!-- 租赁天数和价格预览 -->
                                 <div class="os-rental-summary" v-if="startTime && endTime">
@@ -564,28 +564,64 @@ const handleSubmitOrder = async () => {
             address: address.value.trim() // 添加地址参数
         };
 
-        const response = await orderApi.createOrder(bookingData);
+        // 1. 创建订单
+        const createResponse = await orderApi.createOrder(bookingData);
         
-        if (response.code === 200) {
-            // 使用后端返回的消息
-            message.success(response.msg || response.message || '订单创建成功');
+        if (createResponse.code === 200) {
+            message.success(createResponse.msg || '订单创建成功');
             
-            // 跳转到订单详情页面（从响应中获取订单ID，如果没有则使用临时方案）
-            const orderId = response.data || 'latest'; // 如果后端返回订单ID，使用它；否则使用 'latest'
+            // 获取订单ID
+            const orderId = createResponse.data;
             
-            router.push({
-                path: '/order/detail',
-                query: {
-                    orderId: orderId,
-                    // 传递基本信息作为备用
-                    carId: orderData.value.car.id,
-                    startTime: startTime.value,
-                    endTime: endTime.value,
-                    address: address.value.trim()
+            if (orderId) {
+                // 2. 调用支付接口
+                try {
+                    const payResponse = await orderApi.payOrder(orderId);
+                    
+                    // 根据调试结果，成功状态码为 500，message 中包含支付表单
+                    if (payResponse.code === 500 && payResponse.message) {
+                        // 支付表单创建成功
+                        const paymentForm = payResponse.message;
+                        
+                        // 在新标签页中打开支付表单
+                        const newWindow = window.open('', '_blank');
+                        if (newWindow) {
+                            newWindow.document.write(paymentForm);
+                            newWindow.document.close();
+                            
+                            // 提示用户支付结果会稍后推送
+                            message.info('支付页面已在新标签页打开，支付结果会稍后推送', {
+                                duration: 4000
+                            });
+                        } else {
+                            // 浏览器阻止了弹窗
+                            message.warning('浏览器阻止了支付页面弹窗，请允许弹窗后重试', {
+                                duration: 4000
+                            });
+                        }
+                    } else {
+                        // 支付请求失败
+                        message.warning(payResponse.message || payResponse.msg || '支付请求失败，请稍后在订单列表中重试', {
+                            duration: 4000
+                        });
+                    }
+                } catch (payError) {
+                    console.error('支付请求失败:', payError);
+                    message.warning('支付请求失败，请稍后在订单列表中重试', {
+                        duration: 4000
+                    });
                 }
-            });
+            }
+            
+            // 3. 延迟 5 秒后跳转到"我的订单"页面
+            setTimeout(() => {
+                message.info('即将跳转到我的订单页面，支付结果会稍后推送');
+                setTimeout(() => {
+                    router.push('/my-orders');
+                }, 1000);
+            }, 5000);
         } else {
-            message.error(response.msg || '创建订单失败');
+            message.error(createResponse.msg || '创建订单失败');
         }
     } catch (error) {
         console.error('创建订单失败:', error);

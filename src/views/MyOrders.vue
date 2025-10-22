@@ -211,6 +211,8 @@
                                                     v-if="order.status === 0"
                                                     type="success"
                                                     @click="handlePay(order)"
+                                                    :loading="payingOrderId === order.id"
+                                                    :disabled="payingOrderId !== null && payingOrderId !== order.id"
                                                     block
                                                 >
                                                     <template #icon>
@@ -387,6 +389,7 @@ const dateRange = ref(null);
 // 订单列表
 const orderList = ref([]);
 const loading = ref(false);
+const payingOrderId = ref(null); // 正在支付的订单ID
 
 // 搜索参数
 const searchParams = reactive({
@@ -550,9 +553,56 @@ const handleViewDetail = (order) => {
 };
 
 // 支付订单
-const handlePay = (order) => {
-    message.info('支付功能开发中');
-    // TODO: 跳转到支付页面
+const handlePay = async (order) => {
+    // 设置正在支付的订单ID
+    payingOrderId.value = order.id;
+    
+    try {
+        // 调用支付接口
+        const payResponse = await orderApi.payOrder(order.id);
+        
+        // 根据调试结果，成功状态码为 500，message 中包含支付表单
+        if (payResponse.code === 500 && payResponse.message) {
+            // 支付表单创建成功
+            const paymentForm = payResponse.message;
+            
+            // 在新标签页中打开支付表单
+            const newWindow = window.open('', '_blank');
+            if (newWindow) {
+                newWindow.document.write(paymentForm);
+                newWindow.document.close();
+                
+                // 提示用户支付结果会稍后推送
+                message.info('支付页面已在新标签页打开，支付结果会稍后推送', {
+                    duration: 4000
+                });
+                
+                // 延迟刷新订单列表
+                setTimeout(() => {
+                    message.success('正在刷新订单列表...');
+                    fetchOrderList();
+                }, 3000);
+            } else {
+                // 浏览器阻止了弹窗
+                message.warning('浏览器阻止了支付页面弹窗，请允许弹窗后重试', {
+                    duration: 4000
+                });
+            }
+        } else {
+            // 支付请求失败
+            message.error(payResponse.message || payResponse.msg || '支付请求失败，请稍后重试', {
+                duration: 4000
+            });
+        }
+    } catch (error) {
+        console.error('支付请求失败:', error);
+        message.error('支付请求失败，请稍后重试', {
+            duration: 4000
+        });
+    } finally {
+        // 清除支付状态
+        payingOrderId.value = null;
+    }
 };
 
 // 取消订单

@@ -234,6 +234,9 @@ export const orderApi = {
     // 使用 download 函数下载文件
     return download('/rental/order/admin/export', {}, defaultFilename);
   },
+  
+  // 支付订单
+  payOrder: (orderId) => put(`/rental/order/pay?orderId=${orderId}`),
 };
 
 // 导出所有API
