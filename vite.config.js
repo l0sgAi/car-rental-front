@@ -4,6 +4,8 @@ import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // GitHub Pages 部署配置 - 设置基础路径
+  base: '/car-rental-front/',
   plugins: [vue()],
   resolve: {
     alias: {
@@ -13,8 +15,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        // TODO 修改为后端接口地址
-        target: 'http://127.0.0.1:8575',
+        // 内网穿透的公网地址
+        target: 'http://p383f6cc.natappfree.cc/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
