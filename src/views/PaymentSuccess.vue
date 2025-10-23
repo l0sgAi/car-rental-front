@@ -93,7 +93,7 @@
               查看我的订单
             </n-button>
             
-            <n-button size="large" @click="goToHome">
+            <n-button type="info" size="large" @click="goToHome">
               <template #icon>
                 <n-icon :component="HomeOutline" />
               </template>

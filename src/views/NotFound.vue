@@ -74,23 +74,6 @@
               </div>
             </div>
           </div>
-          
-          <!-- 主要操作按钮 -->
-          <div class="action-buttons">
-            <n-button type="primary" size="large" @click="goToHome">
-              <template #icon>
-                <n-icon :component="HomeOutline" />
-              </template>
-              返回首页
-            </n-button>
-            
-            <n-button size="large" @click="goBack" secondary>
-              <template #icon>
-                <n-icon :component="ArrowBackOutline" />
-              </template>
-              返回上一页
-            </n-button>
-          </div>
         </div>
       </n-card>
       

@@ -78,14 +78,14 @@
               重新支付
             </n-button>
             
-            <n-button size="large" @click="goToOrders">
+            <n-button type="primary" size="large" @click="goToOrders">
               <template #icon>
                 <n-icon :component="ReceiptOutline" />
               </template>
               返回我的订单
             </n-button>
             
-            <n-button size="large" @click="goToHome" secondary>
+            <n-button type="info" size="large" @click="goToHome">
               <template #icon>
                 <n-icon :component="HomeOutline" />
               </template>
