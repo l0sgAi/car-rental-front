@@ -233,7 +233,6 @@ import {
     CreateOutline,
     CloseCircleOutline,
     CheckmarkCircleOutline,
-    ClockOutline,
     AlertCircleOutline,
     HourglassOutline,
     LocationOutline
@@ -329,7 +328,7 @@ const getStatusIcon = () => {
         case 1: return CheckmarkCircleOutline; // 已支付
         case 2: return CloseCircleOutline; // 已取消
         case 3: return CheckmarkCircleOutline; // 已完成
-        default: return ClockOutline;
+        default: return HourglassOutline; // 等待中/处理中
     }
 };
 
