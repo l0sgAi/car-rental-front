@@ -84,6 +84,21 @@ const routes = [
       }
     ]
   },
+  {
+    path: "/payment/success",
+    name: "PaymentSuccess",
+    component: () => import("../views/PaymentSuccess.vue"),
+  },
+  {
+    path: "/payment/fail",
+    name: "PaymentFail",
+    component: () => import("../views/PaymentFail.vue"),
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "NotFound",
+    component: () => import("../views/NotFound.vue"),
+  },
 ];
 
 const router = createRouter({
