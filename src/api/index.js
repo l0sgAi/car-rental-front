@@ -51,10 +51,11 @@ export const chatApi = {
   
   // 创建SSE连接获取流式响应
   createSSEConnection: (sessionId) => {
+    const baseURL = 'https://car.mynatapp.cc';
     const tokenName = localStorage.getItem('tokenName');
     const tokenValue = localStorage.getItem('tokenValue');
     
-    let url = `/api/chat/stream/${sessionId}`;
+    let url = `${baseURL}/chat/stream/${sessionId}`;
     
     // 如果有token，添加到URL参数中
     if (tokenName && tokenValue) {
