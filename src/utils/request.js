@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: 'https://car.mynatapp.cc', // API基础URL
+  baseURL: '/api', // 使用代理路径，在开发环境会被 vite 代理到后端地址
   timeout: 150000, // 请求超时时间，单位毫秒
   headers: {
     'Content-Type': 'application/json;charset=utf-8',

@@ -15,8 +15,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        // TODO 修改为后端接口地址
-        target: 'http://127.0.0.1:8575',
+        // 后端接口地址
+        target: 'https://car.mynatapp.cc',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
