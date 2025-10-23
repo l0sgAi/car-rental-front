@@ -87,7 +87,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   // 控制滚动行为：每次路由切换时滚动到顶部
   scrollBehavior(to, from, savedPosition) {
