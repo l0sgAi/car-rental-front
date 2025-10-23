@@ -143,12 +143,16 @@
 .mo-order-image {
     position: relative;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
 }
 
-.mo-order-status-badge {
-    position: absolute;
-    top: 8px;
-    left: 8px;
+.mo-status-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
 }
 
 .mo-order-info {

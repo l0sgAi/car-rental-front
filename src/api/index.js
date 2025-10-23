@@ -237,6 +237,9 @@ export const orderApi = {
   
   // 支付订单
   payOrder: (orderId) => put(`/rental/order/pay?orderId=${orderId}`),
+  
+  // 取消订单
+  cancelOrder: (orderId) => put(`/rental/order/cancel?orderId=${orderId}`),
 };
 
 // 导出所有API

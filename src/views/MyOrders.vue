@@ -145,13 +145,15 @@
                                                 object-fit="cover"
                                                 fallback-src="https://via.placeholder.com/180x120/2c3e50/ffffff?text=Car"
                                             />
-                                            <n-tag
-                                                :type="getStatusType(order.status)"
-                                                size="small"
-                                                class="mo-order-status-badge"
-                                            >
-                                                {{ getStatusText(order.status) }}
-                                            </n-tag>
+                                            <div class="mo-status-container">
+                                                <n-tag
+                                                    :type="getStatusType(order.status)"
+                                                    size="small"
+                                                    class="mo-order-status-badge"
+                                                >
+                                                    {{ getStatusText(order.status) }}
+                                                </n-tag>
+                                            </div>
                                         </div>
 
                                         <!-- 订单信息 -->
@@ -222,7 +224,7 @@
                                                 </n-button>
                                                 <n-popconfirm
                                                     v-if="order.status === 0 || order.status === 1"
-                                                    @positive-click="handleCancel(order.id)"
+                                                    @positive-click="handleCancel(order)"
                                                 >
                                                     <template #trigger>
                                                         <n-button type="error" block>
@@ -232,7 +234,7 @@
                                                             取消订单
                                                         </n-button>
                                                     </template>
-                                                    确定要取消该订单吗？
+                                                    确定要取消该订单吗？{{ order.status === 1 ? '取消后将进行退款处理。' : '' }}
                                                 </n-popconfirm>
                                             </n-space>
                                         </div>
@@ -427,7 +429,9 @@ const statusOptions = [
     { label: '已支付', value: 1 },
     { label: '租赁中', value: 2 },
     { label: '已完成', value: 3 },
-    { label: '已取消', value: 4 }
+    { label: '已取消', value: 4 },
+    { label: '待退款', value: 5 },
+    { label: '已退款', value: 6 }
 ];
 
 // 统计数据
@@ -443,13 +447,29 @@ const statistics = computed(() => {
 
 // 获取状态文本
 const getStatusText = (status) => {
-    const map = { 0: '待支付', 1: '已支付', 2: '租赁中', 3: '已完成', 4: '已取消' };
+    const map = { 
+        0: '待支付', 
+        1: '已支付', 
+        2: '租赁中', 
+        3: '已完成', 
+        4: '已取消',
+        5: '待退款',
+        6: '已退款'
+    };
     return map[status] || '未知';
 };
 
 // 获取状态类型
 const getStatusType = (status) => {
-    const map = { 0: 'warning', 1: 'success', 2: 'info', 3: 'success', 4: 'default' };
+    const map = { 
+        0: 'warning', 
+        1: 'success', 
+        2: 'info', 
+        3: 'success', 
+        4: 'default',
+        5: 'warning',
+        6: 'info'
+    };
     return map[status] || 'default';
 };
 
@@ -606,9 +626,24 @@ const handlePay = async (order) => {
 };
 
 // 取消订单
-const handleCancel = (id) => {
-    message.warning('取消订单功能待后端接口支持');
-    // TODO: 实现取消订单
+const handleCancel = async (order) => {
+    try {
+        loading.value = true;
+        const response = await orderApi.cancelOrder(order.id);
+        
+        if (response.code === 200) {
+            message.success('订单取消成功' + (order.status === 1 ? '，退款处理中' : ''));
+            // 刷新订单列表
+            await fetchOrderList();
+        } else {
+            message.error(response.message || '取消订单失败');
+        }
+    } catch (error) {
+        console.error('取消订单失败:', error);
+        message.error('取消订单失败，请稍后重试');
+    } finally {
+        loading.value = false;
+    }
 };
 
 // 返回
