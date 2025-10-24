@@ -159,6 +159,9 @@ export const carApi = {
   // 全局查询车辆列表（使用POST + RequestBody）
   globalQuery: (data) => post(`/rental/car/globalQuery`, data),
   
+  // 全局查询车辆列表（分页版本，使用POST + RequestBody）
+  globalQueryWithPage: (data) => post(`/rental/car/globalQueryWithPage`, data),
+  
   // 管理员一键上架车辆到ES
   upCars: () => post(`/rental/car/admin/up`),
   

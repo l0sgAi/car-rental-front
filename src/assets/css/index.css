@@ -293,6 +293,14 @@
     font-size: 14px;
 }
 
+.empty-section {
+    margin-top: 80px;
+    padding: 60px 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 /* Naive UI 深色主题额外样式 */
 :deep(.n-input) {
     background-color: rgba(255, 255, 255, 0.05) !important;

@@ -251,6 +251,24 @@
                     <n-spin size="large" />
                     <span>加载中...</span>
                 </div>
+                
+                <!-- 加载更多提示 -->
+                <div class="loading-section" v-if="isLoadingMore && !isLoading">
+                    <n-spin size="medium" />
+                    <span>加载更多...</span>
+                </div>
+                
+                <!-- 没有更多数据提示 -->
+                <div class="no-more-section" v-if="!isLoading && !isLoadingMore && carList.length > 0 && !hasNextPage">
+                    <n-divider style="margin: 24px 0;">
+                        没有更多车辆了
+                    </n-divider>
+                </div>
+                
+                <!-- 空状态提示 -->
+                <div class="empty-section" v-if="!isLoading && carList.length === 0">
+                    <n-empty description="暂无车辆数据" size="large" />
+                </div>
             </div>
         </n-layout-content>
     </div>
@@ -258,7 +276,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, h, watch } from 'vue';
+import { ref, onMounted, onUnmounted, h, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMessage, darkTheme } from 'naive-ui';
 import {
@@ -280,7 +298,8 @@ import {
     NGridItem,
     NRate,
     NSpin,
-    NConfigProvider
+    NConfigProvider,
+    NEmpty
 } from 'naive-ui';
 import {
     CarSportOutline,
@@ -442,6 +461,11 @@ const isLoading = ref(false);
 const brandIdMap = ref({});
 // 品牌ID到名称的映射（用于显示）
 const brandNameMap = ref({});
+// 分页相关状态
+const pageSize = ref(12); // 每页加载12条
+const searchAfter = ref(null); // search_after游标
+const hasNextPage = ref(true); // 是否还有下一页
+const isLoadingMore = ref(false); // 是否正在加载更多
 
 // 获取品牌列表并建立映射
 const fetchBrandList = async () => {
@@ -574,15 +598,40 @@ const transformCarData = (car) => {
     };
 };
 
+// 重置分页状态
+const resetPagination = () => {
+    searchAfter.value = null;
+    hasNextPage.value = true;
+    carList.value = [];
+};
+
 // 获取车辆列表
-const fetchCarList = async () => {
-    if (isLoading.value) return;
+const fetchCarList = async (isLoadMore = false) => {
+    // 如果是加载更多但没有下一页，直接返回
+    if (isLoadMore && !hasNextPage.value) {
+        return;
+    }
     
-    isLoading.value = true;
+    // 防止重复加载
+    if (isLoadMore) {
+        if (isLoadingMore.value) return;
+        isLoadingMore.value = true;
+    } else {
+        if (isLoading.value) return;
+        isLoading.value = true;
+        // 如果不是加载更多，重置分页状态
+        resetPagination();
+    }
     
     try {
         // 构建查询参数（使用POST + RequestBody）
         const params = {};
+        
+        // 添加分页参数
+        params.pageSize = pageSize.value;
+        if (isLoadMore && searchAfter.value) {
+            params.searchAfter = searchAfter.value;
+        }
         
         // 添加搜索关键字
         if (searchKeyword.value) {
@@ -635,19 +684,31 @@ const fetchCarList = async () => {
         
         //('查询参数:', params);
         
-        const response = await carApi.globalQuery(params);
+        // 使用新的分页接口
+        const response = await carApi.globalQueryWithPage(params);
         
         //('车辆列表响应:', response);
         
         if (response.code === 200 && response.data) {
-            //('开始转换车辆数据，数据量:', response.data.length);
-            //('第一条车辆原始数据示例:', response.data[0]);
-            //('当前品牌名称映射表:', brandNameMap.value);
+            const pageResult = response.data;
             
-            // 转换数据并直接替换列表
-            carList.value = response.data.map(transformCarData);
+            //('开始转换车辆数据，数据量:', pageResult.records.length);
             
-            //('转换后的第一条车辆数据:', carList.value[0]);
+            // 转换数据
+            const newCarList = pageResult.records.map(transformCarData);
+            
+            // 如果是加载更多，追加数据；否则替换数据
+            if (isLoadMore) {
+                carList.value = [...carList.value, ...newCarList];
+            } else {
+                carList.value = newCarList;
+            }
+            
+            // 更新分页状态
+            searchAfter.value = pageResult.searchAfter;
+            hasNextPage.value = pageResult.hasNext || false;
+            
+            //(`加载${isLoadMore ? '更多' : ''}车辆数据成功，当前总数: ${carList.value.length}, 是否有下一页: ${hasNextPage.value}`);
         } else {
             message.error(response.msg || '获取车辆列表失败');
         }
@@ -655,7 +716,11 @@ const fetchCarList = async () => {
         console.error('获取车辆列表失败:', error);
         message.error('获取车辆列表失败，请稍后重试');
     } finally {
-        isLoading.value = false;
+        if (isLoadMore) {
+            isLoadingMore.value = false;
+        } else {
+            isLoading.value = false;
+        }
     }
 };
 
@@ -705,9 +770,33 @@ const goToAdmin = () => {
 
 // 监听筛选条件和排序变化，自动重新加载
 watch([selectedCarType, selectedBrand, selectedPowerType, selectedSort], () => {
-    // 重新加载
-    fetchCarList();
+    // 重新加载（重置分页）
+    fetchCarList(false);
 });
+
+// 滚动事件处理 - 检测是否到达底部
+const handleScroll = () => {
+    // 如果正在加载或没有更多数据，不处理
+    if (isLoadingMore.value || !hasNextPage.value) {
+        return;
+    }
+    
+    // 获取滚动容器
+    const scrollContainer = document.documentElement || document.body;
+    
+    // 计算距离底部的距离
+    const scrollTop = scrollContainer.scrollTop;
+    const scrollHeight = scrollContainer.scrollHeight;
+    const clientHeight = scrollContainer.clientHeight;
+    
+    // 当距离底部还有300px时开始加载
+    const threshold = 300;
+    
+    if (scrollTop + clientHeight >= scrollHeight - threshold) {
+        //('触发加载更多');
+        fetchCarList(true);
+    }
+};
 
 // 组件挂载时获取用户信息并初始化数据
 onMounted(async () => {
@@ -718,7 +807,15 @@ onMounted(async () => {
     await fetchBrandList();
     
     // 品牌列表加载完成后，再初始化加载车辆数据
-    fetchCarList();
+    fetchCarList(false);
+    
+    // 添加滚动监听
+    window.addEventListener('scroll', handleScroll);
+});
+
+// 组件卸载时移除滚动监听
+onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
 });
 </script>
 
