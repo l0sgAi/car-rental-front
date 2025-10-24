@@ -401,7 +401,7 @@ const searchParams = reactive({
 
 // 文件上传相关
 const fileList = ref([]);
-const uploadAction = `https://car.mynatapp.cc/system/file/fileUpload`;
+const uploadAction = `${import.meta.env.VITE_API_BASE_URL}/system/file/fileUpload`;
 const uploadHeaders = computed(() => {
     const tokenName = localStorage.getItem('tokenName');
     const tokenValue = localStorage.getItem('tokenValue');

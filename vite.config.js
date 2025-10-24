@@ -1,10 +1,14 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import { copyFileSync } from 'fs'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // 加载环境变量
+  const env = loadEnv(mode, process.cwd())
+  
+  return {
   plugins: [
     vue(),
     // 构建完成后自动创建 404.html（GitHub Pages SPA 支持）
@@ -33,8 +37,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        // 后端接口地址
-        target: 'https://car.mynatapp.cc',
+        // 后端接口地址，从环境变量读取
+        target: env.VITE_API_BASE_URL,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
@@ -55,4 +59,4 @@ export default defineConfig({
       }
     }
   }
-})
+}})

@@ -51,7 +51,7 @@ export const chatApi = {
   
   // 创建SSE连接获取流式响应
   createSSEConnection: (sessionId) => {
-    const baseURL = 'https://car.mynatapp.cc';
+    const baseURL = import.meta.env.VITE_API_BASE_URL;
     const tokenName = localStorage.getItem('tokenName');
     const tokenValue = localStorage.getItem('tokenValue');
     

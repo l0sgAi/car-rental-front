@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: 'https://car.mynatapp.cc', 
+  baseURL: import.meta.env.VITE_API_BASE_URL, 
   timeout: 150000, // 请求超时时间，单位毫秒
   headers: {
     'Content-Type': 'application/json;charset=utf-8',
