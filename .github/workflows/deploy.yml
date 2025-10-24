@@ -37,6 +37,8 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          VITE_API_BASE_URL: "https://car.mynatapp.cc"
         run: npm run build
 
       - name: Upload artifact
