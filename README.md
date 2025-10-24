@@ -27,3 +27,5 @@ npm run dev
 
   ➜  press h + enter to show help
 ```
+
+该项目也被部署在`https://l0sgai.github.io/car-rental-front/`
