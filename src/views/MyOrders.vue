@@ -236,6 +236,17 @@
                                                     </template>
                                                     确定要取消该订单吗？{{ order.status === 1 ? '取消后将进行退款处理。' : '' }}
                                                 </n-popconfirm>
+                                                <n-button
+                                                    v-if="order.status === 3 && (order.score === null || order.score === undefined)"
+                                                    type="warning"
+                                                    @click="handleOpenRating(order)"
+                                                    block
+                                                >
+                                                    <template #icon>
+                                                        <n-icon :component="StarOutline" />
+                                                    </template>
+                                                    订单评分
+                                                </n-button>
                                             </n-space>
                                         </div>
                                     </div>
@@ -323,6 +334,92 @@
                     <n-button @click="showDetailModal = false">关闭</n-button>
                 </template>
             </n-modal>
+
+            <!-- 订单评分对话框 -->
+            <n-modal
+                v-model:show="showRatingModal"
+                preset="dialog"
+                title="订单评分"
+                style="width: 500px"
+            >
+                <n-space v-if="ratingOrder" vertical :size="20" style="margin-top: 24px">
+                    <!-- 订单信息 -->
+                    <n-card size="small" :bordered="false" style="background-color: rgba(255, 255, 255, 0.05)">
+                        <n-space vertical :size="8">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <n-icon :component="CarSportOutline" size="20" color="#18a058" />
+                                <span style="font-weight: 600; font-size: 16px;">{{ ratingOrder.carName }}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px; color: rgba(255, 255, 255, 0.6); font-size: 14px;">
+                                <n-icon :component="ReceiptOutline" size="16" />
+                                <span>订单编号：{{ ratingOrder.id }}</span>
+                            </div>
+                        </n-space>
+                    </n-card>
+
+                    <!-- 评分区域 -->
+                    <n-card size="small" :bordered="false">
+                        <n-space vertical :size="16" align="center">
+                            <div style="text-align: center;">
+                                <div style="font-size: 15px; color: rgba(255, 255, 255, 0.8); margin-bottom: 16px;">
+                                    请为本次租车体验评分
+                                </div>
+                                <!-- 评分组件 -->
+                                <n-slider
+                                    v-model:value="ratingScore"
+                                    :min="0"
+                                    :max="10"
+                                    :step="1"
+                                    :marks="{0: '0', 5: '5', 10: '10'}"
+                                    style="margin: 24px 0;"
+                                />
+                                <div style="margin-top: 20px;">
+                                    <n-statistic label="">
+                                        <template #prefix>
+                                            <n-icon :component="StarOutline" size="32" color="#f0a020" />
+                                        </template>
+                                        <n-number-animation
+                                            :from="0"
+                                            :to="ratingScore"
+                                            :duration="300"
+                                            :active="true"
+                                        />
+                                        <template #suffix>
+                                            <span style="font-size: 24px; margin-left: 4px;">分</span>
+                                        </template>
+                                    </n-statistic>
+                                </div>
+                            </div>
+                            
+                            <!-- 评分说明 -->
+                            <n-space style="width: 100%; margin-top: 12px;" vertical :size="4">
+                                <div style="font-size: 13px; color: rgba(255, 255, 255, 0.5); text-align: center;">
+                                    <div>0-3分：非常不满意</div>
+                                    <div>4-6分：一般</div>
+                                    <div>7-8分：满意</div>
+                                    <div>9-10分：非常满意</div>
+                                </div>
+                            </n-space>
+                        </n-space>
+                    </n-card>
+                </n-space>
+
+                <template #action>
+                    <n-space>
+                        <n-button @click="showRatingModal = false">取消</n-button>
+                        <n-button
+                            type="warning"
+                            :loading="submittingRating"
+                            @click="handleSubmitRating"
+                        >
+                            <template #icon>
+                                <n-icon :component="StarOutline" />
+                            </template>
+                            提交评分
+                        </n-button>
+                    </n-space>
+                </template>
+            </n-modal>
         </div>
     </n-config-provider>
 </template>
@@ -357,7 +454,10 @@ import {
     NDescriptionsItem,
     NText,
     NPopconfirm,
-    NRate
+    NRate,
+    NSlider,
+    NStatistic,
+    NNumberAnimation
 } from 'naive-ui';
 import {
     ArrowBackOutline,
@@ -566,6 +666,12 @@ const handleFilterChange = () => {
 const showDetailModal = ref(false);
 const currentOrder = ref(null);
 
+// 评分对话框
+const showRatingModal = ref(false);
+const ratingOrder = ref(null);
+const ratingScore = ref(5);
+const submittingRating = ref(false);
+
 // 查看详情
 const handleViewDetail = (order) => {
     currentOrder.value = order;
@@ -643,6 +749,39 @@ const handleCancel = async (order) => {
         message.error('取消订单失败，请稍后重试');
     } finally {
         loading.value = false;
+    }
+};
+
+// 打开评分对话框
+const handleOpenRating = (order) => {
+    ratingOrder.value = order;
+    ratingScore.value = 5; // 默认评分5分
+    showRatingModal.value = true;
+};
+
+// 提交评分
+const handleSubmitRating = async () => {
+    if (!ratingOrder.value) {
+        return;
+    }
+    
+    try {
+        submittingRating.value = true;
+        const response = await orderApi.rankingOrder(ratingOrder.value.id, ratingScore.value);
+        
+        if (response.code === 200) {
+            message.success('评分成功！感谢您的反馈');
+            showRatingModal.value = false;
+            // 刷新订单列表
+            await fetchOrderList();
+        } else {
+            message.error(response.message || response.msg || '评分失败，请稍后重试');
+        }
+    } catch (error) {
+        console.error('评分失败:', error);
+        message.error('评分失败，请稍后重试');
+    } finally {
+        submittingRating.value = false;
     }
 };
 

@@ -243,6 +243,9 @@ export const orderApi = {
   
   // 取消订单
   cancelOrder: (orderId) => put(`/rental/order/cancel?orderId=${orderId}`),
+  
+  // 订单评分
+  rankingOrder: (orderId, score) => put(`/rental/order/ranking?orderId=${orderId}&score=${score}`),
 };
 
 // 导出所有API
