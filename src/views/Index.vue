@@ -234,7 +234,7 @@
                                 <div class="car-rating">
                                     <n-rate :value="car.rating" :allow-half="true" readonly size="small" />
                                     <span class="rating-score">{{ car.rating.toFixed(1) }}</span>
-                                    <span class="rating-count">({{ car.ratingCount }})</span>
+                                    <!-- <span class="rating-count">({{ car.ratingCount }})</span> -->
                                 </div>
                                 <div class="car-price">
                                     <span class="price-label">¥</span>
@@ -417,6 +417,12 @@ const selectedSort = ref('hot');
 
 // 搜索处理
 const handleSearch = () => {
+    // 如果正在加载中，防止重复搜索
+    if (isLoading.value || isLoadingMore.value) {
+        message.warning('数据加载中，请稍候...');
+        return;
+    }
+    
     // //('搜索关键词:', searchKeyword.value);
     // message.info(`搜索: ${searchKeyword.value || '全部车辆'}`);
     // 重新加载
@@ -425,6 +431,12 @@ const handleSearch = () => {
 
 // 应用价格筛选
 const applyPriceFilter = () => {
+    // 如果正在加载中，防止重复点击
+    if (isLoading.value || isLoadingMore.value) {
+        message.warning('数据加载中，请稍候...');
+        return;
+    }
+    
     // 验证输入
     if (tempPriceRange.value[0] > tempPriceRange.value[1]) {
         message.error('最低价格不能大于最高价格');
@@ -443,6 +455,12 @@ const applyPriceFilter = () => {
 
 // 清除价格筛选
 const clearPriceFilter = () => {
+    // 如果正在加载中，防止重复操作
+    if (isLoading.value || isLoadingMore.value) {
+        message.warning('数据加载中，请稍候...');
+        return;
+    }
+    
     priceRange.value = [0, 2000];
     tempPriceRange.value = [0, 2000];
     priceFilterApplied.value = false;
@@ -776,8 +794,8 @@ watch([selectedCarType, selectedBrand, selectedPowerType, selectedSort], () => {
 
 // 滚动事件处理 - 检测是否到达底部
 const handleScroll = () => {
-    // 如果正在加载或没有更多数据，不处理
-    if (isLoadingMore.value || !hasNextPage.value) {
+    // 如果正在加载（包括初始加载和加载更多）或没有更多数据，不处理
+    if (isLoading.value || isLoadingMore.value || !hasNextPage.value) {
         return;
     }
     
