@@ -513,7 +513,7 @@ import {
 import '../assets/css/car-detail.css';
 
 // 引入API
-import { carApi, commentApi } from '../api';
+import { carApi, commentApi, userApi } from '../api';
 
 const route = useRoute();
 const router = useRouter();
@@ -1137,9 +1137,95 @@ const formatDate = (dateStr) => {
     });
 };
 
+// 计算用户年龄
+const calculateAge = (birthdate) => {
+    if (!birthdate) {
+        return null;
+    }
+    
+    const today = new Date();
+    const birth = new Date(birthdate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    // 如果还没到生日，年龄减1
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    
+    return age;
+};
+
+// 验证用户信息
+const validateUserInfo = async () => {
+    try {
+        const response = await userApi.getUserInfo();
+        
+        if (response.code !== 200 || !response.data) {
+            message.error('获取用户信息失败，请重新登录');
+            return false;
+        }
+        
+        const userInfo = response.data;
+        
+        // 检查身份证号码
+        if (!userInfo.idNumber || userInfo.idNumber.trim() === '') {
+            message.error('您的详细身份信息为空，请先完善个人信息', {
+                duration: 3000
+            });
+            setTimeout(() => {
+                router.push('/profile');
+            }, 1500);
+            return false;
+        }
+        
+        // 检查驾驶证号码
+        if (!userInfo.licenseNumber || userInfo.licenseNumber.trim() === '') {
+            message.error('您的详细身份信息为空，请先完善个人信息', {
+                duration: 3000
+            });
+            setTimeout(() => {
+                router.push('/profile');
+            }, 1500);
+            return false;
+        }
+        
+        // 检查年龄
+        if (!userInfo.birthdate) {
+            message.error('您的详细身份信息为空，请先完善个人信息', {
+                duration: 3000
+            });
+            setTimeout(() => {
+                router.push('/profile');
+            }, 1500);
+            return false;
+        }
+        
+        const age = calculateAge(userInfo.birthdate);
+        if (age === null || age < 18) {
+            message.error('您的详细身份信息为空，请先完善个人信息', {
+                duration: 3000
+            });
+            return false;
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('获取用户信息失败:', error);
+        message.error('获取用户信息失败，请重试');
+        return false;
+    }
+};
+
 // 马上租
-const handleRent = () => {
-    // 跳转到下单页面
+const handleRent = async () => {
+    // 在跳转前，先验证用户信息
+    const isUserInfoValid = await validateUserInfo();
+    if (!isUserInfoValid) {
+        return;
+    }
+    
+    // 验证通过后，跳转到下单页面
     router.push({
         path: '/order/start',
         query: {
