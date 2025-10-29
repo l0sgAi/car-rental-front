@@ -200,8 +200,49 @@
                             </n-space>
                         </n-card>
 
-                        <!-- 分页 -->
-                        <n-pagination
+                        <!-- 游标分页控件（Beta 版本）-->
+                        <n-space v-if="commentList.length > 0" justify="center" align="center" style="margin-top: 20px;">
+                            <n-button 
+                                @click="handlePrevPage" 
+                                :disabled="cursorHistory.length <= 1"
+                                :loading="loading"
+                            >
+                                <template #icon>
+                                    <n-icon :component="ArrowBackOutline" />
+                                </template>
+                                上一页
+                            </n-button>
+                            
+                            <n-select
+                                v-model:value="pagination.pageSize"
+                                :options="[
+                                    { label: '10 条/页', value: 10 },
+                                    { label: '20 条/页', value: 20 },
+                                    { label: '30 条/页', value: 30 },
+                                    { label: '50 条/页', value: 50 }
+                                ]"
+                                @update:value="handlePageSizeChange"
+                                style="width: 120px;"
+                            />
+                            
+                            <n-tag type="info">
+                                共 {{ pagination.total }} 条
+                            </n-tag>
+                            
+                            <n-button 
+                                @click="handleNextPage" 
+                                :disabled="!pagination.hasMore"
+                                :loading="loading"
+                            >
+                                下一页
+                                <template #icon>
+                                    <n-icon :component="ArrowForwardOutline" />
+                                </template>
+                            </n-button>
+                        </n-space>
+
+                        <!-- 原有页码分页（已废弃，保留用于回滚）-->
+                        <!-- <n-pagination
                             v-if="commentList.length > 0"
                             v-model:page="pagination.page"
                             v-model:page-size="pagination.pageSize"
@@ -211,7 +252,7 @@
                             @update:page="handlePageChange"
                             @update:page-size="handlePageSizeChange"
                             style="justify-content: center; margin-top: 20px;"
-                        />
+                        /> -->
                     </n-space>
                 </n-spin>
             </n-space>
@@ -317,7 +358,8 @@ import {
     NPagination,
     NSpin,
     NEmpty,
-    NAlert
+    NAlert,
+    NSelect
 } from 'naive-ui';
 import {
     SearchOutline,
@@ -330,7 +372,9 @@ import {
     RefreshOutline,
     InformationCircleOutline,
     HeartOutline,
-    ReturnDownForwardOutline
+    ReturnDownForwardOutline,
+    ArrowBackOutline,
+    ArrowForwardOutline
 } from '@vicons/ionicons5';
 import { commentApi } from '@/api';
 
@@ -347,10 +391,19 @@ const searchKeyword = ref('');
 const commentList = ref([]);
 
 // 分页配置
+// 原有页码分页配置（已废弃，保留用于回滚）
+// const pagination = reactive({
+//     page: 1,
+//     pageSize: 10,
+//     total: 0
+// });
+
+// 游标分页配置（Beta版本）
 const pagination = reactive({
-    page: 1,
     pageSize: 10,
-    total: 0
+    total: 0,
+    lastDate: '0', // 游标：上一页最后一条数据的 create_time
+    hasMore: true // 是否还有更多数据
 });
 
 // 统计数据
@@ -411,12 +464,12 @@ const formatTime = (time) => {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
-// 获取评论列表
-const fetchCommentList = async () => {
+// 获取评论列表（游标分页 Beta 版本）
+const fetchCommentList = async (isNext = false) => {
     loading.value = true;
     try {
         const params = {
-            pageNum: pagination.page,
+            lastDate: pagination.lastDate,
             pageSize: pagination.pageSize
         };
         
@@ -425,12 +478,30 @@ const fetchCommentList = async () => {
             params.keyWord = searchKeyword.value;
         }
         
-        const response = await commentApi.getCommentList(params);
+        const response = await commentApi.getCommentListWithCursor(params);
         
         if (response.code === 200) {
             commentList.value = response.data || [];
-            // API返回的总数字段是count，不是total
             pagination.total = response.count || 0;
+            
+            // 判断是否还有更多数据
+            pagination.hasMore = commentList.value.length === pagination.pageSize;
+            
+            // 如果是下一页操作且有数据，将旧游标保存到历史栈
+            if (isNext && commentList.value.length > 0) {
+                const oldCursor = pagination.lastDate;
+                if (!cursorHistory.value.includes(oldCursor)) {
+                    cursorHistory.value.push(oldCursor);
+                }
+            }
+            
+            // 更新游标：获取当前页最后一条数据的 create_time
+            // 统一格式化为 yyyy-MM-dd HH:mm:ss 格式传给后端
+            if (commentList.value.length > 0) {
+                const lastComment = commentList.value[commentList.value.length - 1];
+                // 使用 formatTime 函数统一格式化日期
+                pagination.lastDate = formatTime(lastComment.createTime) || '0';
+            }
         } else {
             message.error(response.message || response.msg || '获取评论列表失败');
         }
@@ -442,31 +513,107 @@ const fetchCommentList = async () => {
     }
 };
 
-// 搜索
+// 原有页码分页实现（已废弃，保留用于回滚）
+// const fetchCommentList = async () => {
+//     loading.value = true;
+//     try {
+//         const params = {
+//             pageNum: pagination.page,
+//             pageSize: pagination.pageSize
+//         };
+//         
+//         // 如果有搜索关键词，添加到参数中
+//         if (searchKeyword.value) {
+//             params.keyWord = searchKeyword.value;
+//         }
+//         
+//         const response = await commentApi.getCommentList(params);
+//         
+//         if (response.code === 200) {
+//             commentList.value = response.data || [];
+//             // API返回的总数字段是count，不是total
+//             pagination.total = response.count || 0;
+//         } else {
+//             message.error(response.message || response.msg || '获取评论列表失败');
+//         }
+//     } catch (error) {
+//         console.error('获取评论列表失败:', error);
+//         message.error(error.message || '获取评论列表失败，请稍后重试');
+//     } finally {
+//         loading.value = false;
+//     }
+// };
+
+// 搜索（游标分页 Beta 版本）
 const handleSearch = () => {
-    pagination.page = 1; // 重置到第一页
+    pagination.lastDate = '0'; // 重置游标
+    cursorHistory.value = ['0']; // 重置游标历史
     fetchCommentList();
 };
 
-// 刷新
+// 刷新（游标分页 Beta 版本）
 const handleRefresh = () => {
     searchKeyword.value = '';
-    pagination.page = 1;
+    pagination.lastDate = '0'; // 重置游标
+    cursorHistory.value = ['0']; // 重置游标历史
     fetchCommentList();
 };
 
-// 分页变化
-const handlePageChange = (page) => {
-    pagination.page = page;
-    fetchCommentList();
+// 游标历史栈，用于支持上一页（游标分页 Beta 版本）
+const cursorHistory = ref(['0']);
+
+// 加载上一页（游标分页 Beta 版本）
+const handlePrevPage = () => {
+    if (cursorHistory.value.length <= 1) {
+        message.warning('已经是第一页了');
+        return;
+    }
+    // 移除当前游标
+    cursorHistory.value.pop();
+    // 获取上一个游标
+    pagination.lastDate = cursorHistory.value[cursorHistory.value.length - 1];
+    fetchCommentList(false);
 };
 
-// 分页大小变化
+// 加载下一页（游标分页 Beta 版本）
+const handleNextPage = () => {
+    if (!pagination.hasMore) {
+        message.warning('没有更多数据了');
+        return;
+    }
+    fetchCommentList(true);
+};
+
+// 分页大小变化（游标分页 Beta 版本）
 const handlePageSizeChange = (pageSize) => {
     pagination.pageSize = pageSize;
-    pagination.page = 1;
+    pagination.lastDate = '0'; // 重置游标
+    cursorHistory.value = ['0']; // 重置游标历史
     fetchCommentList();
 };
+
+// 原有页码分页处理函数（已废弃，保留用于回滚）
+// const handleSearch = () => {
+//     pagination.page = 1; // 重置到第一页
+//     fetchCommentList();
+// };
+
+// const handleRefresh = () => {
+//     searchKeyword.value = '';
+//     pagination.page = 1;
+//     fetchCommentList();
+// };
+
+// const handlePageChange = (page) => {
+//     pagination.page = page;
+//     fetchCommentList();
+// };
+
+// const handlePageSizeChange = (pageSize) => {
+//     pagination.pageSize = pageSize;
+//     pagination.page = 1;
+//     fetchCommentList();
+// };
 
 // 回复评论
 const handleReply = (comment) => {
