@@ -387,7 +387,7 @@
                                                         <template #icon>
                                                             <n-icon :component="ChevronDownOutline" />
                                                         </template>
-                                                        {{ comment.replyPage === 0 ? `查看更多回复` : '加载更多回复' }}
+                                                        {{ comment.replyPage === 0 ? `查看${comment.replyCount}条回复` : '加载更多回复' }}
                                                     </n-button>
                                                     <!-- 如果已加载完成 -->
                                                     <div v-else class="all-replies-loaded">
@@ -607,9 +607,10 @@ const fetchCarDetail = async () => {
 // 处理单个评论的回复列表
 const processCommentReplies = (comment) => {
     // 后端返回的回复在 children 字段中
-    const { children, ...commentWithoutChildren } = comment;
+    const { children, followCount, ...commentWithoutChildren } = comment;
     const allReplies = children || [];
-    const replyCount = allReplies.length;
+    // 优先使用 followCount，如果不存在则使用 children 长度
+    const replyCount = followCount !== undefined ? followCount : allReplies.length;
     
     // 为每个回复添加被回复人的用户名和点赞状态
     const processedReplies = allReplies.map(reply => {
@@ -651,7 +652,8 @@ const processCommentReplies = (comment) => {
         replyCount: replyCount, // 总回复数
         isLoadingReplies: false,
         replyPage: 0, // 0表示还未开始分页加载，1+表示已经开始分页
-        allRepliesLoaded: replyCount < 3 // 如果初始<3条，已全部加载
+        // 如果回复数>0但列表为空，说明还未加载；或者列表长度小于回复总数，说明未加载完
+        allRepliesLoaded: replyCount === 0 || (allReplies.length >= replyCount)
     };
 };
 
@@ -900,9 +902,10 @@ const getVisibleReplies = (comment) => {
     }
     
     // 规则1：如果回复数<3，显示全部（初始就已经全部显示）
-    if (comment.replyCount < 3) {
-        return comment.replyList;
-    }
+    // 修改：现在初始不显示，点击后加载。如果已加载，则按规则显示
+    // if (comment.replyCount < 3) {
+    //    return comment.replyList;
+    // }
     
     // 规则2：如果还未开始分页加载（replyPage === 0），只显示初始的2条
     if (comment.replyPage === 0) {
@@ -922,9 +925,8 @@ const getVisibleReplies = (comment) => {
 
 // 是否显示"加载更多回复"区域（包括按钮或已加载完成提示）
 const shouldShowLoadMore = (comment) => {
-    // 只有当回复数 >= 3 时才显示加载更多区域
-    // 如果回复数 < 3，初始就已经显示全部了，不需要加载更多
-    return comment.replyCount >= 3;
+    // 只要有回复，就显示查看/加载更多区域
+    return comment.replyCount > 0;
 };
 
 // 处理回复的 followUsername
